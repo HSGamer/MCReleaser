@@ -1,29 +1,18 @@
 package me.hsgamer.mcreleaser.core.property;
 
 import java.util.Locale;
-import java.util.Objects;
 
 public class PropertyKey {
     private final String key;
     private final String env;
-    private final String defaultValue;
 
-    public PropertyKey(String key, String env, String defaultValue) {
+    public PropertyKey(String key, String env) {
         this.key = key;
         this.env = env;
-        this.defaultValue = defaultValue;
     }
 
-    public PropertyKey(String key, String env, Object defaultValue) {
-        this(key, env, Objects.toString(defaultValue));
-    }
-
-    public PropertyKey(String key, String defaultValue) {
-        this(key, camelToConstant(key), defaultValue);
-    }
-
-    public PropertyKey(String key, Object defaultValue) {
-        this(key, camelToConstant(key), defaultValue);
+    public PropertyKey(String key) {
+        this(key, camelToConstant(key));
     }
 
     private static String camelToConstant(String camel) {
@@ -34,13 +23,14 @@ public class PropertyKey {
                 .replaceFirst("_$", "");
     }
 
+    public boolean isPresent() {
+        return getValue() != null;
+    }
+
     public String getValue() {
         String value = System.getenv(env);
         if (value == null) {
             value = System.getProperty(key);
-        }
-        if (value == null) {
-            value = defaultValue;
         }
         return value;
     }
