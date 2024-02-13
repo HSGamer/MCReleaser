@@ -35,11 +35,22 @@ public class PropertyKey {
         return value;
     }
 
-    public Number asNumber() {
-        return Double.parseDouble(getValue());
+    public String getValue(String defaultValue) {
+        String value = getValue();
+        return value == null ? defaultValue : value;
     }
 
-    public boolean asBoolean() {
-        return Boolean.parseBoolean(getValue());
+    public Number asNumber(Number defaultValue) {
+        String value = getValue();
+        try {
+            return value == null ? defaultValue : Double.parseDouble(value);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
+    public boolean asBoolean(boolean defaultValue) {
+        String value = getValue();
+        return value == null ? defaultValue : Boolean.parseBoolean(value);
     }
 }
