@@ -27,6 +27,10 @@ public class PropertyKey {
         return getValue() != null;
     }
 
+    public boolean isAbsent() {
+        return getValue() == null;
+    }
+
     public String getValue() {
         String value = System.getenv(env);
         if (value == null) {
