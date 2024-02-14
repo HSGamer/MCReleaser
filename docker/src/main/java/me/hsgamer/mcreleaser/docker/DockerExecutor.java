@@ -62,6 +62,9 @@ public class DockerExecutor {
 
         String secondaryGlob = DockerPropertyKey.SECONDARY_GLOB.getValue("");
 
+        System.out.println("Primary glob: " + primaryGlob);
+        System.out.println("Secondary glob: " + secondaryGlob);
+
         PathMatcher primaryMatcher = FileSystems.getDefault().getPathMatcher("glob:" + primaryGlob);
         PathMatcher secondaryMatcher = FileSystems.getDefault().getPathMatcher("glob:" + secondaryGlob);
 
@@ -71,6 +74,7 @@ public class DockerExecutor {
             pathStream
                     .filter(Files::isRegularFile)
                     .forEach(path -> {
+                        System.out.println(path.toString());
                         if (primaryMatcher.matches(path)) {
                             primaryFileRef.set(path.toFile());
                         } else if (secondaryMatcher.matches(path)) {
