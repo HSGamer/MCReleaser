@@ -21,8 +21,8 @@ public class GithubPlatform implements Platform {
     private final Logger logger = LoggerProvider.getLogger(getClass());
 
     public GithubPlatform() {
-        if (GithubPropertyKey.TAG.isPresent()) {
-            String version = getVersionFromTagReference(GithubPropertyKey.TAG.getValue());
+        if (GithubPropertyKey.REF.isPresent()) {
+            String version = getVersionFromRef(GithubPropertyKey.REF.getValue());
             if (CommonPropertyKey.VERSION.isAbsent()) {
                 CommonPropertyKey.VERSION.setValue(version);
             }
@@ -32,13 +32,13 @@ public class GithubPlatform implements Platform {
         }
     }
 
-    private String getVersionFromTagReference(String tagReference) {
+    private String getVersionFromRef(String tagReference) {
         return tagReference.replace("refs/tags/", "");
     }
 
     @Override
     public Optional<BatchRunnable> createUploadRunnable(FileBundle fileBundle) {
-        if (GithubPropertyKey.TOKEN.isAbsent() || GithubPropertyKey.REPOSITORY.isAbsent() || GithubPropertyKey.TAG.isAbsent()) {
+        if (GithubPropertyKey.TOKEN.isAbsent() || GithubPropertyKey.REPOSITORY.isAbsent() || GithubPropertyKey.REF.isAbsent()) {
             return Optional.empty();
         }
 
@@ -72,9 +72,9 @@ public class GithubPlatform implements Platform {
         releasePool.addLast(process -> {
             try {
                 GHRepository repository = (GHRepository) process.getData().get("repository");
-                GHRelease release = repository.getReleaseByTagName(GithubPropertyKey.TAG.getValue());
+                GHRelease release = repository.getReleaseByTagName(GithubPropertyKey.REF.getValue());
                 if (release == null) {
-                    release = repository.createRelease(GithubPropertyKey.TAG.getValue())
+                    release = repository.createRelease(GithubPropertyKey.REF.getValue())
                             .draft(GithubPropertyKey.DRAFT.asBoolean(false))
                             .prerelease(GithubPropertyKey.PRERELEASE.asBoolean(false))
                             .name(CommonPropertyKey.NAME.getValue())
