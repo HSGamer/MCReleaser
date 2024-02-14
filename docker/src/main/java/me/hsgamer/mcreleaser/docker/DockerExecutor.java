@@ -70,7 +70,6 @@ public class DockerExecutor {
                     .filter(Files::isRegularFile)
                     .forEach(path -> {
                         Path relativePath = currentPath.relativize(path);
-                        System.out.println(relativePath);
                         if (primaryMatcher.matches(relativePath)) {
                             primaryFileRef.set(path.toFile());
                         } else if (secondaryMatcher.matches(relativePath)) {
