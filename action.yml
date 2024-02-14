@@ -1,0 +1,19 @@
+name: 'MCReleaser'
+description: 'A program to publish artifacts to multiple Minecraft-related platforms'
+inputs:
+  primary:
+    description: 'The primary artifact to publish'
+    required: true
+  secondary:
+    description: 'The secondary artifact to publish'
+    required: false
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - ${{ inputs.primary }}
+    - ${{ inputs.secondary }}
+  env:
+    GITHUB_TOKEN: ${{ github.token }}
+    GITHUB_REPOSITORY: ${{ github.repository }}
+    GITHUB_TAG: ${{ github.ref }}

@@ -11,8 +11,16 @@ import me.hsgamer.mcreleaser.core.util.Validate;
 import me.hsgamer.mcreleaser.github.GithubPlatform;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.PathMatcher;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 
 public class DockerExecutor {
     private static final List<Platform> PLATFORMS = List.of(
@@ -26,7 +34,7 @@ public class DockerExecutor {
     public static void main(String[] args) {
         CommonPropertyKey.checkPresent();
 
-        FileBundle fileBundle = getFileBundle();
+        FileBundle fileBundle = getFileBundle(args);
 
         List<BatchRunnable> runnableList = PLATFORMS.stream()
                 .map(platform -> platform.createUploadRunnable(fileBundle))
@@ -48,20 +56,34 @@ public class DockerExecutor {
         }
     }
 
-    private static FileBundle getFileBundle() {
-        File primaryDir = new File("primary");
-        Validate.check(primaryDir.exists(), "'primary' does not exist");
+    private static FileBundle getFileBundle(String[] args) {
+        String primaryGlob = args.length > 0 ? args[0] : "";
+        Validate.check(!primaryGlob.isEmpty(), "Primary glob is empty");
 
-        File secondaryDir = new File("secondary");
-        Validate.check(secondaryDir.exists(), "'secondary' does not exist");
+        String secondaryGlob = args.length > 1 ? args[1] : "";
 
-        File[] primaryFiles = primaryDir.listFiles();
-        Validate.check(primaryFiles != null && primaryFiles.length > 0, "Files in directory 'primary' is null or empty");
+        PathMatcher primaryMatcher = FileSystems.getDefault().getPathMatcher("glob:" + primaryGlob);
+        PathMatcher secondaryMatcher = FileSystems.getDefault().getPathMatcher("glob:" + secondaryGlob);
 
-        File primaryFile = primaryFiles[0];
-        File[] secondaryFiles = secondaryDir.listFiles();
-        Validate.check(secondaryFiles != null, "Files in directory 'secondary' is null. That's weird");
+        AtomicReference<File> primaryFileRef = new AtomicReference<>();
+        List<File> secondaryFiles = new ArrayList<>();
+        try (Stream<Path> pathStream = Files.walk(new File(".").toPath())) {
+            pathStream
+                    .filter(Files::isRegularFile)
+                    .forEach(path -> {
+                        if (primaryMatcher.matches(path)) {
+                            primaryFileRef.set(path.toFile());
+                        } else if (secondaryMatcher.matches(path)) {
+                            secondaryFiles.add(path.toFile());
+                        }
+                    });
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
-        return new FileBundle(primaryFile, List.of(secondaryFiles));
+        File primaryFile = primaryFileRef.get();
+        Validate.check(primaryFile != null, "Primary file not found");
+
+        return new FileBundle(primaryFile, secondaryFiles);
     }
 }
