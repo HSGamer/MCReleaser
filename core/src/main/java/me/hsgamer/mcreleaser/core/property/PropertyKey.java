@@ -1,6 +1,7 @@
 package me.hsgamer.mcreleaser.core.property;
 
 import java.util.Locale;
+import java.util.Objects;
 
 public class PropertyKey {
     private final String key;
@@ -56,5 +57,13 @@ public class PropertyKey {
     public boolean asBoolean(boolean defaultValue) {
         String value = getValue();
         return value == null ? defaultValue : Boolean.parseBoolean(value);
+    }
+
+    public void setValue(String value) {
+        System.setProperty(key, value);
+    }
+
+    public void setValue(Object value) {
+        setValue(Objects.toString(value));
     }
 }
