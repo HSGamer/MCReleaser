@@ -1,6 +1,5 @@
 package me.hsgamer.mcreleaser.core.property;
 
-import java.util.Locale;
 import java.util.Objects;
 
 public class PropertyKey {
@@ -17,11 +16,14 @@ public class PropertyKey {
     }
 
     private static String camelToConstant(String camel) {
-        return camel.toUpperCase(Locale.ROOT)
-                .replaceAll("([A-Z]+)", "_$1")
-                .replaceAll("[-\\s]+", "_")
-                .replaceFirst("^_", "")
-                .replaceFirst("_$", "");
+        StringBuilder constant = new StringBuilder();
+        for (char c : camel.toCharArray()) {
+            if (Character.isUpperCase(c)) {
+                constant.append('_');
+            }
+            constant.append(Character.toUpperCase(c));
+        }
+        return constant.toString();
     }
 
     public boolean isPresent() {
