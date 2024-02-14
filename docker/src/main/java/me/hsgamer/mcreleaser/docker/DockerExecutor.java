@@ -1,5 +1,7 @@
 package me.hsgamer.mcreleaser.docker;
 
+import me.hsgamer.hscore.logger.provider.LoggerProvider;
+import me.hsgamer.hscore.logger.system.SystemLogger;
 import me.hsgamer.hscore.task.BatchRunnable;
 import me.hsgamer.hscore.task.element.TaskPool;
 import me.hsgamer.mcreleaser.core.file.FileBundle;
@@ -14,6 +16,10 @@ public class DockerExecutor {
     private static final List<Platform> PLATFORMS = List.of(
             new GithubPlatform()
     );
+
+    static {
+        LoggerProvider.setLoggerProvider(SystemLogger::new);
+    }
 
     public static void main(String[] args) {
         FileBundle fileBundle = getFileBundle();

@@ -42,5 +42,11 @@
             <artifactId>mc-releaser-github</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>me.hsgamer</groupId>
+            <artifactId>hscore-logger-system</artifactId>
+            <version>${core.version}</version>
+        </dependency>
     </dependencies>
 </project>
