@@ -12,10 +12,7 @@ import me.hsgamer.mcreleaser.github.GithubPlatform;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.PathMatcher;
+import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -62,22 +59,21 @@ public class DockerExecutor {
 
         String secondaryGlob = DockerPropertyKey.SECONDARY_GLOB.getValue("");
 
-        System.out.println("Primary glob: " + primaryGlob);
-        System.out.println("Secondary glob: " + secondaryGlob);
-
         PathMatcher primaryMatcher = FileSystems.getDefault().getPathMatcher("glob:" + primaryGlob);
         PathMatcher secondaryMatcher = FileSystems.getDefault().getPathMatcher("glob:" + secondaryGlob);
 
         AtomicReference<File> primaryFileRef = new AtomicReference<>();
         List<File> secondaryFiles = new ArrayList<>();
-        try (Stream<Path> pathStream = Files.walk(new File(".").toPath())) {
+        Path currentPath = Paths.get(".");
+        try (Stream<Path> pathStream = Files.walk(currentPath)) {
             pathStream
                     .filter(Files::isRegularFile)
                     .forEach(path -> {
-                        System.out.println(path.toString());
-                        if (primaryMatcher.matches(path)) {
+                        Path relativePath = currentPath.relativize(path);
+                        System.out.println(relativePath);
+                        if (primaryMatcher.matches(relativePath)) {
                             primaryFileRef.set(path.toFile());
-                        } else if (secondaryMatcher.matches(path)) {
+                        } else if (secondaryMatcher.matches(relativePath)) {
                             secondaryFiles.add(path.toFile());
                         }
                     });
