@@ -21,8 +21,14 @@ public class GithubPlatform implements Platform {
     private final Logger logger = LoggerProvider.getLogger(getClass());
 
     public GithubPlatform() {
-        if (GithubPropertyKey.TAG.isPresent() && CommonPropertyKey.VERSION.isAbsent()) {
-            CommonPropertyKey.VERSION.setValue(getVersionFromTagReference(GithubPropertyKey.TAG.getValue()));
+        if (GithubPropertyKey.TAG.isPresent()) {
+            String version = getVersionFromTagReference(GithubPropertyKey.TAG.getValue());
+            if (CommonPropertyKey.VERSION.isAbsent()) {
+                CommonPropertyKey.VERSION.setValue(version);
+            }
+            if (CommonPropertyKey.NAME.isAbsent()) {
+                CommonPropertyKey.NAME.setValue(version);
+            }
         }
     }
 
