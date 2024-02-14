@@ -20,6 +20,16 @@ import java.util.Optional;
 public class GithubPlatform implements Platform {
     private final Logger logger = LoggerProvider.getLogger(getClass());
 
+    public GithubPlatform() {
+        if (GithubPropertyKey.TAG.isPresent() && CommonPropertyKey.VERSION.isAbsent()) {
+            CommonPropertyKey.VERSION.setValue(getVersionFromTagReference(GithubPropertyKey.TAG.getValue()));
+        }
+    }
+
+    private String getVersionFromTagReference(String tagReference) {
+        return tagReference.replace("refs/tags/", "");
+    }
+
     @Override
     public Optional<BatchRunnable> createUploadRunnable(FileBundle fileBundle) {
         if (GithubPropertyKey.TOKEN.isAbsent() || GithubPropertyKey.REPOSITORY.isAbsent() || GithubPropertyKey.TAG.isAbsent()) {
