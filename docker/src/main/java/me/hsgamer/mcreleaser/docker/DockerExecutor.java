@@ -23,11 +23,13 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 public class DockerExecutor {
-    private static final List<Platform> PLATFORMS = List.of(
-            new GithubPlatform()
-    );
+    private static final List<Platform> PLATFORMS;
 
     static {
+        System.out.println("DockerExecutor");
+        PLATFORMS = List.of(
+                new GithubPlatform()
+        );
         LoggerProvider.setLoggerProvider(SystemLogger::new);
     }
 
