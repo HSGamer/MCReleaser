@@ -13,7 +13,3 @@ runs:
   args:
     - ${{ inputs.primary }}
     - ${{ inputs.secondary }}
-  env:
-    GITHUB_TOKEN: ${{ github.token }}
-    GITHUB_REPOSITORY: ${{ github.repository }}
-    GITHUB_TAG: ${{ github.ref }}
