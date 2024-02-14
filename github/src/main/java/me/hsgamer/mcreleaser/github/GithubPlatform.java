@@ -14,7 +14,7 @@ import org.kohsuke.github.GitHub;
 import org.kohsuke.github.GitHubBuilder;
 
 import java.io.File;
-import java.nio.file.Files;
+import java.net.URLConnection;
 import java.util.Optional;
 
 public class GithubPlatform implements Platform {
@@ -97,7 +97,8 @@ public class GithubPlatform implements Platform {
             try {
                 GHRelease release = (GHRelease) process.getData().get("release");
                 for (File file : fileBundle.allFiles()) {
-                    release.uploadAsset(file, Files.probeContentType(file.toPath()));
+                    String contentType = URLConnection.guessContentTypeFromName(file.getName());
+                    release.uploadAsset(file, contentType);
                     logger.log(LogLevel.INFO, "File uploaded: " + file.getName());
                 }
                 logger.log(LogLevel.INFO, "All files uploaded");
