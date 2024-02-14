@@ -23,6 +23,7 @@ public class GithubPlatform implements Platform {
     public GithubPlatform() {
         if (GithubPropertyKey.TAG.isPresent()) {
             String version = getVersionFromTagReference(GithubPropertyKey.TAG.getValue());
+            System.out.println("Version: " + version);
             if (CommonPropertyKey.VERSION.isAbsent()) {
                 CommonPropertyKey.VERSION.setValue(version);
             }
