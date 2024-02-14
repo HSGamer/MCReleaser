@@ -6,6 +6,8 @@ import me.hsgamer.hscore.task.BatchRunnable;
 import me.hsgamer.hscore.task.element.TaskPool;
 import me.hsgamer.mcreleaser.core.file.FileBundle;
 import me.hsgamer.mcreleaser.core.platform.Platform;
+import me.hsgamer.mcreleaser.core.property.CommonPropertyKey;
+import me.hsgamer.mcreleaser.core.util.Validate;
 import me.hsgamer.mcreleaser.github.GithubPlatform;
 
 import java.io.File;
@@ -22,6 +24,8 @@ public class DockerExecutor {
     }
 
     public static void main(String[] args) {
+        CommonPropertyKey.checkPresent();
+
         FileBundle fileBundle = getFileBundle();
 
         List<BatchRunnable> runnableList = PLATFORMS.stream()
@@ -46,24 +50,17 @@ public class DockerExecutor {
 
     private static FileBundle getFileBundle() {
         File primaryDir = new File("primary");
-        if (!primaryDir.exists()) {
-            throw new IllegalStateException("'primary' does not exist");
-        }
+        Validate.check(primaryDir.exists(), "'primary' does not exist");
+
         File secondaryDir = new File("secondary");
-        if (!secondaryDir.exists()) {
-            throw new IllegalStateException("'secondary' does not exist");
-        }
+        Validate.check(secondaryDir.exists(), "'secondary' does not exist");
 
         File[] primaryFiles = primaryDir.listFiles();
-        if (primaryFiles == null || primaryFiles.length == 0) {
-            throw new IllegalStateException("'primary' is empty");
-        }
+        Validate.check(primaryFiles != null && primaryFiles.length > 0, "Files in directory 'primary' is null or empty");
 
         File primaryFile = primaryFiles[0];
         File[] secondaryFiles = secondaryDir.listFiles();
-        if (secondaryFiles == null) {
-            throw new IllegalStateException("Files in directory 'secondary' is null. That's weird");
-        }
+        Validate.check(secondaryFiles != null, "Files in directory 'secondary' is null. That's weird");
 
         return new FileBundle(primaryFile, List.of(secondaryFiles));
     }
