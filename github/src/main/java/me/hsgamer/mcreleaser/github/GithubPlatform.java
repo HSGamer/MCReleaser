@@ -8,13 +8,13 @@ import me.hsgamer.hscore.task.element.TaskPool;
 import me.hsgamer.mcreleaser.core.file.FileBundle;
 import me.hsgamer.mcreleaser.core.platform.Platform;
 import me.hsgamer.mcreleaser.core.property.CommonPropertyKey;
+import me.hsgamer.mcreleaser.core.util.MimeDetector;
 import org.kohsuke.github.GHRelease;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 import org.kohsuke.github.GitHubBuilder;
 
 import java.io.File;
-import java.net.URLConnection;
 import java.util.Optional;
 
 public class GithubPlatform implements Platform {
@@ -97,8 +97,7 @@ public class GithubPlatform implements Platform {
             try {
                 GHRelease release = (GHRelease) process.getData().get("release");
                 for (File file : fileBundle.allFiles()) {
-                    String contentType = URLConnection.guessContentTypeFromName(file.getName());
-                    release.uploadAsset(file, contentType);
+                    release.uploadAsset(file, MimeDetector.getType(file));
                     logger.log(LogLevel.INFO, "File uploaded: " + file.getName());
                 }
                 logger.log(LogLevel.INFO, "All files uploaded");
