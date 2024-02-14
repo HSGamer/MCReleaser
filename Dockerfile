@@ -1,4 +1,4 @@
-FROM java:17
+FROM openjdk:17
 RUN apt-get update
 RUN apt-get install -y maven
 
