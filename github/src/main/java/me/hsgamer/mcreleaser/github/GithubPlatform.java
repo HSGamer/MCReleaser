@@ -31,7 +31,7 @@ public class GithubPlatform implements Platform {
         TaskPool preparePool = runnable.getTaskPool(0);
         preparePool.addLast(process -> {
             try {
-                GitHub gitHub = new GitHubBuilder().withJwtToken(GithubPropertyKey.TOKEN.getValue()).build();
+                GitHub gitHub = new GitHubBuilder().withOAuthToken(GithubPropertyKey.TOKEN.getValue()).build();
                 process.getData().put("github", gitHub);
                 logger.log(LogLevel.INFO, "GitHub instance created");
                 process.next();
