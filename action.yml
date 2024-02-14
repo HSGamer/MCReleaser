@@ -10,6 +10,6 @@ inputs:
 runs:
   using: 'docker'
   image: 'Dockerfile'
-  args:
-    - ${{ inputs.primary }}
-    - ${{ inputs.secondary }}
+  env:
+    DOCKER_PRIMARY: ${{ inputs.primary }}
+    DOCKER_SECONDARY: ${{ inputs.secondary }}

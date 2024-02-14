@@ -34,7 +34,7 @@ public class DockerExecutor {
     public static void main(String[] args) {
         CommonPropertyKey.checkPresent();
 
-        FileBundle fileBundle = getFileBundle(args);
+        FileBundle fileBundle = getFileBundle();
 
         List<BatchRunnable> runnableList = PLATFORMS.stream()
                 .map(platform -> platform.createUploadRunnable(fileBundle))
@@ -56,11 +56,11 @@ public class DockerExecutor {
         }
     }
 
-    private static FileBundle getFileBundle(String[] args) {
-        String primaryGlob = args.length > 0 ? args[0] : "";
-        Validate.check(!primaryGlob.isEmpty(), "Primary glob is empty");
+    private static FileBundle getFileBundle() {
+        String primaryGlob = DockerPropertyKey.PRIMARY_GLOB.getValue();
+        Validate.check(primaryGlob != null && !primaryGlob.isEmpty(), "Primary glob is empty");
 
-        String secondaryGlob = args.length > 1 ? args[1] : "";
+        String secondaryGlob = DockerPropertyKey.SECONDARY_GLOB.getValue("");
 
         PathMatcher primaryMatcher = FileSystems.getDefault().getPathMatcher("glob:" + primaryGlob);
         PathMatcher secondaryMatcher = FileSystems.getDefault().getPathMatcher("glob:" + secondaryGlob);
