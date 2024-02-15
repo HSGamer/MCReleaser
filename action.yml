@@ -1,15 +1,11 @@
 name: 'MCReleaser'
 description: 'A program to publish artifacts to multiple Minecraft-related platforms'
 inputs:
-  primary:
-    description: 'The primary artifact to publish'
+  files:
+    description: 'The files to upload'
     required: true
-  secondary:
-    description: 'The secondary artifact to publish'
-    required: false
 runs:
   using: 'docker'
   image: 'Dockerfile'
   env:
-    DOCKER_PRIMARY: ${{ inputs.primary }}
-    DOCKER_SECONDARY: ${{ inputs.secondary }}
+    DOCKER_FILES: ${{ inputs.files }}

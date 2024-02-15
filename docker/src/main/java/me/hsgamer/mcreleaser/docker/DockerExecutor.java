@@ -54,26 +54,39 @@ public class DockerExecutor {
     }
 
     private static FileBundle getFileBundle() {
-        String primaryGlob = DockerPropertyKey.PRIMARY_GLOB.getValue();
-        Validate.check(primaryGlob != null && !primaryGlob.isEmpty(), "Primary glob is empty");
+        String fileGlobs = DockerPropertyKey.FILES.getValue();
+        String[] globs = fileGlobs.split("\\s+");
+        PathMatcher primaryMatcher = null;
+        List<PathMatcher> secondaryMatchers = new ArrayList<>();
+        for (String glob : globs) {
+            PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:" + glob);
+            if (primaryMatcher == null) {
+                primaryMatcher = matcher;
+            } else {
+                secondaryMatchers.add(matcher);
+            }
+        }
 
-        String secondaryGlob = DockerPropertyKey.SECONDARY_GLOB.getValue("");
-
-        PathMatcher primaryMatcher = FileSystems.getDefault().getPathMatcher("glob:" + primaryGlob);
-        PathMatcher secondaryMatcher = FileSystems.getDefault().getPathMatcher("glob:" + secondaryGlob);
+        Validate.check(primaryMatcher != null, "Primary glob is empty");
 
         AtomicReference<File> primaryFileRef = new AtomicReference<>();
         List<File> secondaryFiles = new ArrayList<>();
         Path currentPath = Paths.get(".");
         try (Stream<Path> pathStream = Files.walk(currentPath)) {
+            PathMatcher finalPrimaryMatcher = primaryMatcher;
             pathStream
                     .filter(Files::isRegularFile)
                     .forEach(path -> {
                         Path relativePath = currentPath.relativize(path);
-                        if (primaryMatcher.matches(relativePath)) {
+                        if (finalPrimaryMatcher.matches(relativePath)) {
                             primaryFileRef.set(path.toFile());
-                        } else if (secondaryMatcher.matches(relativePath)) {
-                            secondaryFiles.add(path.toFile());
+                        } else {
+                            for (PathMatcher secondaryMatcher : secondaryMatchers) {
+                                if (secondaryMatcher.matches(relativePath)) {
+                                    secondaryFiles.add(path.toFile());
+                                    break;
+                                }
+                            }
                         }
                     });
         } catch (IOException e) {
