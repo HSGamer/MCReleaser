@@ -13,6 +13,7 @@
         <module>github</module>
         <module>bundle</module>
         <module>docker</module>
+        <module>modrinth</module>
     </modules>
 
     <properties>
