@@ -51,8 +51,6 @@ public class BundlePlatform implements Platform {
 
         TaskPool schedulePool = batchRunnable.getTaskPool(0);
         schedulePool.addLast(process -> {
-            //noinspection unchecked
-            List<Platform> platforms = (List<Platform>) process.getData().get("platforms");
             List<BatchRunnable> runnableList = platforms.stream()
                     .map(platform -> platform.createUploadRunnable(fileBundle))
                     .filter(Optional::isPresent)
