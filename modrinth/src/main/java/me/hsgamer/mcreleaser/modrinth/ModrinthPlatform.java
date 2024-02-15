@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 public class ModrinthPlatform implements Platform {
     private final Logger logger = LoggerProvider.getLogger(getClass());
@@ -106,33 +105,39 @@ public class ModrinthPlatform implements Platform {
 
             api.versions()
                     .getProjectVersions(projectId, GetProjectVersions.GetProjectVersionsRequest.builder().featured(true).build())
-                    .thenAccept(projectVersions -> {
-                        logger.log(LogLevel.INFO, "Get all featured versions");
-                        process.getData().put("projectVersions", projectVersions);
+                    .whenComplete((projectVersions, throwable) -> {
+                        if (throwable != null) {
+                            logger.log(LogLevel.ERROR, "Failed to get all featured versions", throwable);
+                            process.complete();
+                            return;
+                        }
+
+                        TaskPool taskPool = process.getCurrentTaskPool();
+                        projectVersions.forEach(projectVersion -> taskPool.addLast(process1 -> api.versions().modifyProjectVersion(projectVersion.getId(), ModifyVersion.ModifyVersionRequest.builder().featured(false).build())
+                                .whenComplete((aVoid, throwable1) -> {
+                                    if (throwable1 != null) {
+                                        logger.log(LogLevel.ERROR, "Failed to un-feature version: " + projectVersion.getId(), throwable1);
+                                    } else {
+                                        logger.log(LogLevel.INFO, "Un-featured version: " + projectVersion.getId());
+                                    }
+                                    process1.next();
+                                })));
+
                         process.next();
                     });
-        });
-        unfeaturePool.addLast(process -> {
-            ModrinthAPI api = (ModrinthAPI) process.getData().get("api");
-            //noinspection unchecked
-            List<ProjectVersion> projectVersions = (List<ProjectVersion>) process.getData().get("projectVersions");
-            CompletableFuture<?>[] futures = projectVersions.stream()
-                    .map(ProjectVersion::getId)
-                    .map(projectVersion -> api.versions().modifyProjectVersion(projectVersion, ModifyVersion.ModifyVersionRequest.builder().featured(false).build()))
-                    .toArray(CompletableFuture[]::new);
-            CompletableFuture.allOf(futures).thenRun(() -> {
-                logger.log(LogLevel.INFO, "All versions are unfeatured");
-                process.next();
-            });
         });
 
         TaskPool uploadPool = batchRunnable.getTaskPool(3);
         uploadPool.addLast(process -> {
             ModrinthAPI api = (ModrinthAPI) process.getData().get("api");
             CreateVersion.CreateVersionRequest request = (CreateVersion.CreateVersionRequest) process.getData().get("request");
-            api.versions().createProjectVersion(request).thenRun(() -> {
-                logger.log(LogLevel.INFO, "The version is uploaded");
-                process.next();
+            api.versions().createProjectVersion(request).whenComplete((projectVersion, throwable) -> {
+                if (throwable != null) {
+                    logger.log(LogLevel.ERROR, "Failed to upload the version", throwable);
+                } else {
+                    logger.log(LogLevel.INFO, "Uploaded the version: " + projectVersion.getId());
+                }
+                process.complete();
             });
         });
 
