@@ -7,6 +7,7 @@ import me.hsgamer.mcreleaser.bundle.BundlePlatform;
 import me.hsgamer.mcreleaser.core.file.FileBundle;
 import me.hsgamer.mcreleaser.core.property.CommonPropertyKey;
 import me.hsgamer.mcreleaser.core.util.PathUtil;
+import me.hsgamer.mcreleaser.core.util.StringUtil;
 import me.hsgamer.mcreleaser.core.util.Validate;
 
 import java.nio.file.Paths;
@@ -38,6 +39,6 @@ public class DockerExecutor {
     private static FileBundle getFileBundle() {
         String fileGlobs = DockerPropertyKey.FILES.getValue();
         Validate.check(fileGlobs != null, "File globs not found");
-        return PathUtil.getFileBundle(Paths.get("."), fileGlobs.split("\\s+"));
+        return PathUtil.getFileBundle(Paths.get("."), StringUtil.splitSpace(fileGlobs));
     }
 }
