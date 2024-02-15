@@ -4,8 +4,13 @@ inputs:
   files:
     description: 'The files to upload'
     required: true
+  platforms:
+    description: 'The platforms to upload to'
+    required: false
+    default: 'all'
 runs:
   using: 'docker'
   image: 'Dockerfile'
   env:
     DOCKER_FILES: ${{ inputs.files }}
+    DOCKER_PLATFORMS: ${{ inputs.platforms }}

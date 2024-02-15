@@ -15,41 +15,39 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class BundlePlatform implements Platform {
-    private final Map<String, Supplier<Platform>> platformMap = Map.ofEntries(
+    private static final Map<String, Supplier<Platform>> PLATFORM_MAP = Map.ofEntries(
             Map.entry("github", GithubPlatform::new)
     );
 
+    private final boolean runSync;
+    private final List<Platform> platforms;
+
+    public BundlePlatform(String usingPlatforms, boolean runSync) {
+        this.runSync = runSync;
+
+        if (usingPlatforms.equalsIgnoreCase("all")) {
+            platforms = PLATFORM_MAP.values()
+                    .stream()
+                    .map(Supplier::get)
+                    .toList();
+        } else {
+            platforms = Stream.of(usingPlatforms.split("\\s+|,"))
+                    .map(PLATFORM_MAP::get)
+                    .filter(Objects::nonNull)
+                    .map(Supplier::get)
+                    .toList();
+        }
+    }
+
     @Override
     public Optional<BatchRunnable> createUploadRunnable(FileBundle fileBundle) {
-        String usingPlatforms = BundlePropertyKey.PLATFORM.getValue("all");
-        boolean runSync = BundlePropertyKey.SYNC.asBoolean(false);
-
-        if (usingPlatforms.isBlank()) {
+        if (platforms.isEmpty()) {
             return Optional.empty();
         }
 
         BatchRunnable batchRunnable = new BatchRunnable();
 
-        TaskPool preparePool = batchRunnable.getTaskPool(0);
-        preparePool.addLast(process -> {
-            List<Platform> platforms;
-            if (usingPlatforms.equalsIgnoreCase("all")) {
-                platforms = platformMap.values()
-                        .stream()
-                        .map(Supplier::get)
-                        .toList();
-            } else {
-                platforms = Stream.of(usingPlatforms.split("\\s+|,"))
-                        .map(platformMap::get)
-                        .filter(Objects::nonNull)
-                        .map(Supplier::get)
-                        .toList();
-            }
-            process.getData().put("platforms", platforms);
-            process.next();
-        });
-
-        TaskPool schedulePool = batchRunnable.getTaskPool(1);
+        TaskPool schedulePool = batchRunnable.getTaskPool(0);
         schedulePool.addLast(process -> {
             //noinspection unchecked
             List<Platform> platforms = (List<Platform>) process.getData().get("platforms");
@@ -62,7 +60,7 @@ public class BundlePlatform implements Platform {
             process.next();
         });
 
-        TaskPool executePool = batchRunnable.getTaskPool(2);
+        TaskPool executePool = batchRunnable.getTaskPool(1);
         executePool.addLast(process -> {
             //noinspection unchecked
             List<BatchRunnable> runnableList = (List<BatchRunnable>) process.getData().get("runnableList");

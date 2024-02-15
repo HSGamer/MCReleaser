@@ -39,7 +39,7 @@
     <dependencies>
         <dependency>
             <groupId>me.hsgamer</groupId>
-            <artifactId>mc-releaser-github</artifactId>
+            <artifactId>mc-releaser-bundle</artifactId>
             <version>${project.version}</version>
         </dependency>
 
