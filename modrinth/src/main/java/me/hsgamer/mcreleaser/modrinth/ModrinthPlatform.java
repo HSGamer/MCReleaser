@@ -63,7 +63,7 @@ public class ModrinthPlatform implements Platform {
                     ProjectVersion.VersionType versionType = ProjectVersion.VersionType.valueOf(versionTypeString.toUpperCase());
                     builder.versionType(versionType);
                 } catch (IllegalArgumentException e) {
-                    logger.log(LogLevel.ERROR, "Invalid version type: " + versionTypeString);
+                    logger.log(LogLevel.ERROR, "Invalid version type: " + versionTypeString, e);
                     process.complete();
                     return;
                 }
@@ -76,7 +76,7 @@ public class ModrinthPlatform implements Platform {
                     List<ProjectVersion.ProjectDependency> dependencies = gson.fromJson(ModrinthPropertyKey.DEPENDENCIES.getValue(), typeToken.getType());
                     builder.dependencies(dependencies);
                 } catch (Exception e) {
-                    logger.log(LogLevel.ERROR, "Invalid dependencies");
+                    logger.log(LogLevel.ERROR, "Invalid dependencies", e);
                     process.complete();
                     return;
                 }
