@@ -8,7 +8,6 @@ import me.hsgamer.hscore.task.element.TaskPool;
 import me.hsgamer.mcreleaser.core.file.FileBundle;
 import me.hsgamer.mcreleaser.core.platform.Platform;
 import me.hsgamer.mcreleaser.core.property.CommonPropertyKey;
-import me.hsgamer.mcreleaser.core.util.MimeDetector;
 import org.kohsuke.github.GHRelease;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
@@ -97,7 +96,7 @@ public class GithubPlatform implements Platform {
             try {
                 GHRelease release = (GHRelease) process.getData().get("release");
                 for (File file : fileBundle.allFiles()) {
-                    release.uploadAsset(file, MimeDetector.getType(file));
+                    release.uploadAsset(file, "application/octet-stream");
                     logger.log(LogLevel.INFO, "File uploaded: " + file.getName());
                 }
                 logger.log(LogLevel.INFO, "All files uploaded");
