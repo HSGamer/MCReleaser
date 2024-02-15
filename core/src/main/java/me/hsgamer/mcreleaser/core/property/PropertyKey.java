@@ -15,6 +15,14 @@ public class PropertyKey {
         this(key, camelToConstant(key));
     }
 
+    public String getKey() {
+        return key;
+    }
+
+    public String getEnv() {
+        return env;
+    }
+
     private static String camelToConstant(String camel) {
         StringBuilder constant = new StringBuilder();
         for (char c : camel.toCharArray()) {

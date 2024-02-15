@@ -38,6 +38,7 @@ public class GithubPlatform implements Platform {
     @Override
     public Optional<BatchRunnable> createUploadRunnable(FileBundle fileBundle) {
         if (GithubPropertyKey.TOKEN.isAbsent() || GithubPropertyKey.REPOSITORY.isAbsent() || GithubPropertyKey.REF.isAbsent()) {
+            logger.log(LogLevel.WARN, "Required: " + String.join(", ", GithubPropertyKey.TOKEN.getKey(), GithubPropertyKey.REPOSITORY.getKey(), GithubPropertyKey.REF.getKey()));
             return Optional.empty();
         }
 

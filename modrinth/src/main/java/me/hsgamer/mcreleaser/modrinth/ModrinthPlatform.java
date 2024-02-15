@@ -30,6 +30,7 @@ public class ModrinthPlatform implements Platform {
     @Override
     public Optional<BatchRunnable> createUploadRunnable(FileBundle fileBundle) {
         if (ModrinthPropertyKey.TOKEN.isAbsent() || ModrinthPropertyKey.PROJECT.isAbsent() || ModrinthPropertyKey.LOADERS.isAbsent() || ModrinthPropertyKey.GAME_VERSIONS.isAbsent()) {
+            logger.log(LogLevel.WARN, "Required: " + String.join(", ", ModrinthPropertyKey.TOKEN.getKey(), ModrinthPropertyKey.PROJECT.getKey(), ModrinthPropertyKey.LOADERS.getKey(), ModrinthPropertyKey.GAME_VERSIONS.getKey()));
             return Optional.empty();
         }
 
