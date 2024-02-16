@@ -46,7 +46,7 @@ public class HangarPlatform implements Platform {
                             }
 
                             String token = apiSession.getToken();
-                            apiClient.setRequestInterceptor(builder -> builder.header("Authorization", token));
+                            apiClient.setRequestInterceptor(builder -> builder.header("Authorization", "Bearer " + token));
                             logger.log(LogLevel.INFO, "Authenticated");
                             process.next();
                         });
