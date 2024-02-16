@@ -8,6 +8,7 @@ import me.hsgamer.hscore.task.element.TaskPool;
 import me.hsgamer.mcreleaser.core.file.FileBundle;
 import me.hsgamer.mcreleaser.core.platform.Platform;
 import me.hsgamer.mcreleaser.core.property.CommonPropertyKey;
+import me.hsgamer.mcreleaser.core.util.PropertyKeyUtil;
 import org.kohsuke.github.GHRelease;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
@@ -37,8 +38,7 @@ public class GithubPlatform implements Platform {
 
     @Override
     public Optional<BatchRunnable> createUploadRunnable(FileBundle fileBundle) {
-        if (GithubPropertyKey.TOKEN.isAbsent() || GithubPropertyKey.REPOSITORY.isAbsent() || GithubPropertyKey.REF.isAbsent()) {
-            logger.log(LogLevel.WARN, "Required: " + String.join(", ", GithubPropertyKey.TOKEN.getKey(), GithubPropertyKey.REPOSITORY.getKey(), GithubPropertyKey.REF.getKey()));
+        if (PropertyKeyUtil.isAbsentAndAnnounce(logger, GithubPropertyKey.TOKEN, GithubPropertyKey.REPOSITORY, GithubPropertyKey.REF)) {
             return Optional.empty();
         }
 

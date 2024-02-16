@@ -6,6 +6,7 @@ public interface CommonPropertyKey {
     PropertyKey NAME = new PropertyKey("name");
     PropertyKey VERSION = new PropertyKey("version");
     PropertyKey DESCRIPTION = new PropertyKey("description");
+    PropertyKey ANNOUCE_MISSING_KEY = new PropertyKey("announceMissingKey");
 
     static void checkPresent() {
         Validate.check(NAME.isPresent(), "name is not present");

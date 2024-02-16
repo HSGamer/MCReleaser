@@ -16,6 +16,7 @@ import me.hsgamer.hscore.task.element.TaskPool;
 import me.hsgamer.mcreleaser.core.file.FileBundle;
 import me.hsgamer.mcreleaser.core.platform.Platform;
 import me.hsgamer.mcreleaser.core.property.CommonPropertyKey;
+import me.hsgamer.mcreleaser.core.util.PropertyKeyUtil;
 import me.hsgamer.mcreleaser.core.util.StringUtil;
 
 import java.util.Arrays;
@@ -28,8 +29,7 @@ public class ModrinthPlatform implements Platform {
 
     @Override
     public Optional<BatchRunnable> createUploadRunnable(FileBundle fileBundle) {
-        if (ModrinthPropertyKey.TOKEN.isAbsent() || ModrinthPropertyKey.PROJECT.isAbsent() || ModrinthPropertyKey.LOADERS.isAbsent() || ModrinthPropertyKey.GAME_VERSIONS.isAbsent()) {
-            logger.log(LogLevel.WARN, "Required: " + String.join(", ", ModrinthPropertyKey.TOKEN.getKey(), ModrinthPropertyKey.PROJECT.getKey(), ModrinthPropertyKey.LOADERS.getKey(), ModrinthPropertyKey.GAME_VERSIONS.getKey()));
+        if (PropertyKeyUtil.isAbsentAndAnnounce(logger, ModrinthPropertyKey.TOKEN, ModrinthPropertyKey.PROJECT, ModrinthPropertyKey.LOADERS, ModrinthPropertyKey.GAME_VERSIONS)) {
             return Optional.empty();
         }
 
