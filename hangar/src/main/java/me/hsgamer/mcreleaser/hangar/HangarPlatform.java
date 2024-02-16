@@ -153,6 +153,7 @@ public class HangarPlatform implements Platform {
             MutableRequest request = MutableRequest.create()
                     .uri(URI.create(baseUrl + "/projects/" + project + "/upload"))
                     .header("Authorization", "Bearer " + token)
+                    .header("Content-Type", "multipart/form-data")
                     .POST(bodyPublisher);
 
             client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
