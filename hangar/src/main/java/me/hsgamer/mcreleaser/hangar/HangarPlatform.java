@@ -155,7 +155,7 @@ public class HangarPlatform implements Platform {
                     .header("Authorization", "Bearer " + token)
                     .POST(bodyPublisher);
 
-            client.sendAsync(request, HttpResponse.BodyHandlers.discarding())
+            client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                     .whenComplete((response, throwable) -> {
                         if (throwable != null) {
                             logger.log(LogLevel.ERROR, "Failed to upload version", throwable);
@@ -163,7 +163,7 @@ public class HangarPlatform implements Platform {
                             return;
                         }
                         if (response.statusCode() != 200) {
-                            logger.log(LogLevel.ERROR, "Failed to upload version: " + response.statusCode());
+                            logger.log(LogLevel.ERROR, "Failed to upload version: " + response.statusCode() + " - " + response.body());
                             process.complete();
                             return;
                         }
