@@ -15,14 +15,6 @@ public class PropertyKey {
         this(key, camelToConstant(key));
     }
 
-    public String getKey() {
-        return key;
-    }
-
-    public String getEnv() {
-        return env;
-    }
-
     private static String camelToConstant(String camel) {
         StringBuilder constant = new StringBuilder();
         for (char c : camel.toCharArray()) {
@@ -32,6 +24,14 @@ public class PropertyKey {
             constant.append(Character.toUpperCase(c));
         }
         return constant.toString();
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public String getEnv() {
+        return env;
     }
 
     public boolean isPresent() {
@@ -48,6 +48,14 @@ public class PropertyKey {
             value = System.getProperty(key);
         }
         return value;
+    }
+
+    public void setValue(String value) {
+        System.setProperty(key, value);
+    }
+
+    public void setValue(Object value) {
+        setValue(Objects.toString(value));
     }
 
     public String getValue(String defaultValue) {
@@ -67,13 +75,5 @@ public class PropertyKey {
     public boolean asBoolean(boolean defaultValue) {
         String value = getValue();
         return value == null ? defaultValue : Boolean.parseBoolean(value);
-    }
-
-    public void setValue(String value) {
-        System.setProperty(key, value);
-    }
-
-    public void setValue(Object value) {
-        setValue(Objects.toString(value));
     }
 }

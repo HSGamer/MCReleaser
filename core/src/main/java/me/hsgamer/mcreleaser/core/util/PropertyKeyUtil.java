@@ -20,7 +20,7 @@ public class PropertyKeyUtil {
         if (missingKeys.isEmpty()) {
             return false;
         } else {
-            if (CommonPropertyKey.ANNOUCE_MISSING_KEY.asBoolean(false)) {
+            if (CommonPropertyKey.ANNOUNCE_MISSING_KEY.asBoolean(false)) {
                 StringBuilder builder = new StringBuilder("The following keys are missing: ");
                 for (PropertyKey missingKey : missingKeys) {
                     builder.append(missingKey.getKey()).append(", ");
