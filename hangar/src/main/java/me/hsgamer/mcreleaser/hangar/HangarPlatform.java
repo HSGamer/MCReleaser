@@ -125,7 +125,7 @@ public class HangarPlatform implements Platform {
                                 return;
                             }
 
-                            logger.log(LogLevel.INFO, "Uploaded version: " + version);
+                            logger.log(LogLevel.INFO, "Uploaded version: " + version.getUrl());
                             process.next();
                         });
             } catch (ApiException e) {
