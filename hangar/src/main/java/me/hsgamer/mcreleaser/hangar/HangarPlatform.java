@@ -142,7 +142,7 @@ public class HangarPlatform implements Platform {
             try {
                 bodyPublisher = MultipartBodyPublisher.newBuilder()
                         .formPart("versionUpload", MoreBodyPublishers.ofObject(versionUpload, MediaType.APPLICATION_JSON))
-                        .filePart("files", fileBundle.primaryFile().toPath())
+                        .filePart("files", fileBundle.primaryFile().toPath(), MediaType.APPLICATION_OCTET_STREAM)
                         .build();
             } catch (FileNotFoundException e) {
                 logger.log(LogLevel.ERROR, "File not found", e);
