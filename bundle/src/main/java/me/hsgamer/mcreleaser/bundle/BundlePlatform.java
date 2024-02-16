@@ -4,6 +4,7 @@ import me.hsgamer.hscore.task.BatchRunnable;
 import me.hsgamer.hscore.task.element.TaskPool;
 import me.hsgamer.mcreleaser.core.file.FileBundle;
 import me.hsgamer.mcreleaser.core.platform.Platform;
+import me.hsgamer.mcreleaser.core.util.StringUtil;
 import me.hsgamer.mcreleaser.github.GithubPlatform;
 import me.hsgamer.mcreleaser.hangar.HangarPlatform;
 import me.hsgamer.mcreleaser.modrinth.ModrinthPlatform;
@@ -35,7 +36,7 @@ public class BundlePlatform implements Platform {
                     .map(Supplier::get)
                     .toList();
         } else {
-            platforms = Stream.of(usingPlatforms.split("\\s+|,"))
+            platforms = Stream.of(StringUtil.splitCommaOrSpace(usingPlatforms))
                     .map(PLATFORM_MAP::get)
                     .filter(Objects::nonNull)
                     .map(Supplier::get)
