@@ -1,28 +1,29 @@
 package me.hsgamer.mcreleaser.hangar;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.github.mizosoft.methanol.*;
+import com.google.gson.reflect.TypeToken;
 import me.hsgamer.hscore.logger.common.LogLevel;
 import me.hsgamer.hscore.logger.common.Logger;
 import me.hsgamer.hscore.logger.provider.LoggerProvider;
 import me.hsgamer.hscore.task.BatchRunnable;
 import me.hsgamer.hscore.task.element.TaskPool;
-import me.hsgamer.mc.releaser.hangar.openapi.api.AuthenticationApi;
-import me.hsgamer.mc.releaser.hangar.openapi.api.VersionsApi;
-import me.hsgamer.mc.releaser.hangar.openapi.invoker.ApiClient;
-import me.hsgamer.mc.releaser.hangar.openapi.invoker.ApiException;
-import me.hsgamer.mc.releaser.hangar.openapi.invoker.Configuration;
-import me.hsgamer.mc.releaser.hangar.openapi.model.MultipartFileOrUrl;
-import me.hsgamer.mc.releaser.hangar.openapi.model.PluginDependency;
-import me.hsgamer.mc.releaser.hangar.openapi.model.VersionUpload;
 import me.hsgamer.mcreleaser.core.file.FileBundle;
 import me.hsgamer.mcreleaser.core.platform.Platform;
 import me.hsgamer.mcreleaser.core.property.CommonPropertyKey;
 import me.hsgamer.mcreleaser.core.util.PropertyKeyUtil;
 import me.hsgamer.mcreleaser.core.util.StringUtil;
+import me.hsgamer.mcreleaser.hangar.adapter.GsonAdapter;
+import me.hsgamer.mcreleaser.hangar.model.ApiSession;
+import me.hsgamer.mcreleaser.hangar.model.VersionUpload;
 
+import java.io.FileNotFoundException;
+import java.net.URI;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.*;
 
 public class HangarPlatform implements Platform {
+    private final String baseUrl = "https://hangar.papermc.io/api/v1";
     private final Logger logger = LoggerProvider.getLogger(getClass());
 
     public HangarPlatform() {
@@ -40,34 +41,42 @@ public class HangarPlatform implements Platform {
         BatchRunnable batchRunnable = new BatchRunnable();
         TaskPool connectPool = batchRunnable.getTaskPool(0);
         connectPool.addLast(process -> {
-            ApiClient apiClient = Configuration.getDefaultApiClient();
-            AuthenticationApi authenticationApi = new AuthenticationApi(apiClient);
-            try {
-                authenticationApi.authenticate(HangarPropertyKey.KEY.getValue())
-                        .whenComplete((apiSession, throwable) -> {
-                            if (throwable != null) {
-                                logger.log(LogLevel.ERROR, "Failed to authenticate", throwable);
-                                process.complete();
-                                return;
-                            }
+            Methanol client = Methanol.newBuilder()
+                    .baseUri(baseUrl)
+                    .autoAcceptEncoding(true)
+                    .defaultHeader("Accept", "application/json")
+                    .build();
+            process.getData().put("client", client);
+            process.next();
+        });
+        connectPool.addLast(process -> {
+            Methanol client = (Methanol) process.getData().get("client");
+            String key = HangarPropertyKey.KEY.getValue();
 
-                            String token = apiSession.getToken();
-                            apiClient.setRequestInterceptor(builder -> builder.header("Authorization", "Bearer " + token));
-                            logger.log(LogLevel.INFO, "Authenticated");
-                            process.next();
-                        });
-            } catch (ApiException e) {
-                logger.log(LogLevel.ERROR, "Failed to authenticate", e);
-                process.complete();
-            }
+            HttpRequest tokenRequest = HttpRequest.newBuilder()
+                    .uri(URI.create("/authenticate?apiKey=" + key))
+                    .POST(HttpRequest.BodyPublishers.noBody())
+                    .build();
+            client.sendAsync(tokenRequest, MoreBodyHandlers.ofObject(ApiSession.class))
+                    .whenComplete((response, throwable) -> {
+                        if (throwable != null) {
+                            logger.log(LogLevel.ERROR, "Failed to get token", throwable);
+                            process.complete();
+                            return;
+                        }
+                        if (response.statusCode() != 200) {
+                            logger.log(LogLevel.ERROR, "Failed to get token: " + response.statusCode());
+                            process.complete();
+                            return;
+                        }
+                        process.getData().put("token", response.body().token());
+                        process.next();
+                    });
         });
 
         TaskPool preparePool = batchRunnable.getTaskPool(0);
         preparePool.addLast(process -> {
-            ApiClient apiClient = Configuration.getDefaultApiClient();
-
-            VersionUpload versionUpload = new VersionUpload();
-            versionUpload.channel(HangarPropertyKey.CHANNEL.getValue("Release"));
+            String channel = HangarPropertyKey.CHANNEL.getValue("Release");
 
             StringBuilder descriptionBuilder = new StringBuilder();
             String nameValue = CommonPropertyKey.NAME.getValue();
@@ -78,13 +87,12 @@ public class HangarPlatform implements Platform {
             }
             descriptionBuilder.append(descriptionValue);
 
-            versionUpload.version(versionValue);
-            versionUpload.description(descriptionBuilder.toString());
+            String finalDescription = descriptionBuilder.toString();
 
             String platformValue = HangarPropertyKey.PLATFORM.getValue();
-            me.hsgamer.mc.releaser.hangar.openapi.model.Platform hangarPlatform;
+            VersionUpload.Platform hangarPlatform;
             try {
-                hangarPlatform = me.hsgamer.mc.releaser.hangar.openapi.model.Platform.valueOf(platformValue.toUpperCase());
+                hangarPlatform = VersionUpload.Platform.valueOf(platformValue.toUpperCase());
             } catch (IllegalArgumentException e) {
                 logger.log(LogLevel.ERROR, "Invalid platform: " + platformValue, e);
                 process.complete();
@@ -93,23 +101,33 @@ public class HangarPlatform implements Platform {
 
             String[] gameVersionValue = StringUtil.splitCommaOrSpace(HangarPropertyKey.GAME_VERSIONS.getValue());
 
-            versionUpload.platformDependencies(Map.of(hangarPlatform.name(), Set.of(gameVersionValue)));
+            Map<VersionUpload.Platform, List<String>> platformDependencies = Map.of(hangarPlatform, List.of(gameVersionValue));
 
+            List<VersionUpload.PluginDependency> pluginDependencies;
             if (HangarPropertyKey.DEPENDENCIES.isPresent()) {
-                Set<PluginDependency> pluginDependencies;
-                TypeReference<Set<PluginDependency>> typeReference = new TypeReference<>() {
+                TypeToken<List<VersionUpload.PluginDependency>> typeToken = new TypeToken<>() {
                 };
                 try {
-                    pluginDependencies = apiClient.getObjectMapper().readValue(HangarPropertyKey.DEPENDENCIES.getValue(), typeReference);
+                    pluginDependencies = GsonAdapter.INSTANCE.fromJson(HangarPropertyKey.DEPENDENCIES.getValue(), typeToken.getType());
                 } catch (Exception e) {
                     logger.log(LogLevel.ERROR, "Invalid dependencies", e);
                     process.complete();
                     return;
                 }
-                versionUpload.pluginDependencies(Map.of(hangarPlatform.name(), pluginDependencies));
+            } else {
+                pluginDependencies = Collections.emptyList();
             }
 
-            versionUpload.addFilesItem(new MultipartFileOrUrl().addPlatformsItem(hangarPlatform).externalUrl(null));
+            List<VersionUpload.MultipartFileOrUrl> files = List.of(new VersionUpload.MultipartFileOrUrl(List.of(hangarPlatform), null));
+
+            VersionUpload versionUpload = new VersionUpload(
+                    versionValue,
+                    Map.of(hangarPlatform, pluginDependencies),
+                    platformDependencies,
+                    finalDescription,
+                    files,
+                    channel
+            );
 
             process.getData().put("versionUpload", versionUpload);
             logger.log(LogLevel.INFO, "Prepared version");
@@ -118,26 +136,44 @@ public class HangarPlatform implements Platform {
 
         TaskPool uploadPool = batchRunnable.getTaskPool(0);
         uploadPool.addLast(process -> {
-            ApiClient apiClient = Configuration.getDefaultApiClient();
-            VersionsApi versionsApi = new VersionsApi(apiClient);
+            Methanol client = (Methanol) process.getData().get("client");
+
+            String token = (String) process.getData().get("token");
             VersionUpload versionUpload = (VersionUpload) process.getData().get("versionUpload");
+            String project = HangarPropertyKey.PROJECT.getValue();
 
+            MultipartBodyPublisher bodyPublisher;
             try {
-                versionsApi.uploadVersion(HangarPropertyKey.PROJECT.getValue(), versionUpload, List.of(fileBundle.primaryFile()))
-                        .whenComplete((version, throwable) -> {
-                            if (throwable != null) {
-                                logger.log(LogLevel.ERROR, "Failed to upload version", throwable);
-                                process.complete();
-                                return;
-                            }
-
-                            logger.log(LogLevel.INFO, "Uploaded version: " + version.getUrl());
-                            process.next();
-                        });
-            } catch (ApiException e) {
-                logger.log(LogLevel.ERROR, "Failed to upload version", e);
+                bodyPublisher = MultipartBodyPublisher.newBuilder()
+                        .formPart("versionUpload", MoreBodyPublishers.ofObject(versionUpload, MediaType.APPLICATION_JSON))
+                        .filePart("files", fileBundle.primaryFile().toPath())
+                        .build();
+            } catch (FileNotFoundException e) {
+                logger.log(LogLevel.ERROR, "File not found", e);
                 process.complete();
+                return;
             }
+
+            MutableRequest request = MutableRequest.create()
+                    .uri(URI.create("/projects/" + project + "/upload"))
+                    .header("Authorization", "Bearer " + token)
+                    .POST(bodyPublisher);
+
+            client.sendAsync(request, HttpResponse.BodyHandlers.discarding())
+                    .whenComplete((response, throwable) -> {
+                        if (throwable != null) {
+                            logger.log(LogLevel.ERROR, "Failed to upload version", throwable);
+                            process.complete();
+                            return;
+                        }
+                        if (response.statusCode() != 200) {
+                            logger.log(LogLevel.ERROR, "Failed to upload version: " + response.statusCode());
+                            process.complete();
+                            return;
+                        }
+                        logger.log(LogLevel.INFO, "Uploaded version");
+                        process.complete();
+                    });
         });
 
         return Optional.of(batchRunnable);
