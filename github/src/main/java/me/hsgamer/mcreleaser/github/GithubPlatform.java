@@ -101,6 +101,7 @@ public class GithubPlatform implements Platform {
                     logger.log(LogLevel.INFO, "File uploaded: " + file.getName());
                 }
                 logger.log(LogLevel.INFO, "All files uploaded");
+                logger.log(LogLevel.INFO, "Release URL: " + release.getHtmlUrl());
                 process.next();
             } catch (Exception e) {
                 logger.log(LogLevel.ERROR, "Failed to upload the file", e);
