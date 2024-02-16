@@ -5,6 +5,7 @@ import me.hsgamer.hscore.task.element.TaskPool;
 import me.hsgamer.mcreleaser.core.file.FileBundle;
 import me.hsgamer.mcreleaser.core.platform.Platform;
 import me.hsgamer.mcreleaser.github.GithubPlatform;
+import me.hsgamer.mcreleaser.hangar.HangarPlatform;
 import me.hsgamer.mcreleaser.modrinth.ModrinthPlatform;
 
 import java.util.List;
@@ -18,7 +19,8 @@ import java.util.stream.Stream;
 public class BundlePlatform implements Platform {
     private static final Map<String, Supplier<Platform>> PLATFORM_MAP = Map.ofEntries(
             Map.entry("github", GithubPlatform::new),
-            Map.entry("modrinth", ModrinthPlatform::new)
+            Map.entry("modrinth", ModrinthPlatform::new),
+            Map.entry("hangar", HangarPlatform::new)
     );
 
     private final boolean runSync;

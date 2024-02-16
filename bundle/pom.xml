@@ -27,5 +27,10 @@
             <artifactId>mc-releaser-modrinth</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>me.hsgamer</groupId>
+            <artifactId>mc-releaser-hangar</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 </project>

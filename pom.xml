@@ -10,10 +10,13 @@
     <packaging>pom</packaging>
     <modules>
         <module>core</module>
-        <module>github</module>
         <module>bundle</module>
         <module>docker</module>
+
+        <!-- Platform-specific modules -->
+        <module>github</module>
         <module>modrinth</module>
+        <module>hangar</module>
     </modules>
 
     <properties>
