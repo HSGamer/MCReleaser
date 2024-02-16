@@ -18,6 +18,7 @@ import me.hsgamer.mcreleaser.hangar.model.VersionUpload;
 
 import java.io.FileNotFoundException;
 import java.net.URI;
+import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.*;
@@ -41,22 +42,16 @@ public class HangarPlatform implements Platform {
         BatchRunnable batchRunnable = new BatchRunnable();
         TaskPool connectPool = batchRunnable.getTaskPool(0);
         connectPool.addLast(process -> {
-            Methanol client = Methanol.newBuilder()
-                    .baseUri(baseUrl)
-                    .autoAcceptEncoding(true)
-                    .defaultHeader("Accept", "application/json")
-                    .build();
+            HttpClient client = HttpClient.newBuilder().build();
             process.getData().put("client", client);
+            logger.log(LogLevel.INFO, "Prepared client");
             process.next();
         });
         connectPool.addLast(process -> {
-            Methanol client = (Methanol) process.getData().get("client");
+            HttpClient client = (HttpClient) process.getData().get("client");
             String key = HangarPropertyKey.KEY.getValue();
 
-            HttpRequest tokenRequest = HttpRequest.newBuilder()
-                    .uri(URI.create("/authenticate?apiKey=" + key))
-                    .POST(HttpRequest.BodyPublishers.noBody())
-                    .build();
+            MutableRequest tokenRequest = MutableRequest.POST(baseUrl + "/authenticate?apiKey=" + key, HttpRequest.BodyPublishers.noBody());
             client.sendAsync(tokenRequest, MoreBodyHandlers.ofObject(ApiSession.class))
                     .whenComplete((response, throwable) -> {
                         if (throwable != null) {
@@ -70,6 +65,7 @@ public class HangarPlatform implements Platform {
                             return;
                         }
                         process.getData().put("token", response.body().token());
+                        logger.log(LogLevel.INFO, "Got token");
                         process.next();
                     });
         });
@@ -136,7 +132,7 @@ public class HangarPlatform implements Platform {
 
         TaskPool uploadPool = batchRunnable.getTaskPool(0);
         uploadPool.addLast(process -> {
-            Methanol client = (Methanol) process.getData().get("client");
+            HttpClient client = (HttpClient) process.getData().get("client");
 
             String token = (String) process.getData().get("token");
             VersionUpload versionUpload = (VersionUpload) process.getData().get("versionUpload");
@@ -155,7 +151,7 @@ public class HangarPlatform implements Platform {
             }
 
             MutableRequest request = MutableRequest.create()
-                    .uri(URI.create("/projects/" + project + "/upload"))
+                    .uri(URI.create(baseUrl + "/projects/" + project + "/upload"))
                     .header("Authorization", "Bearer " + token)
                     .POST(bodyPublisher);
 
