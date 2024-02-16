@@ -25,6 +25,12 @@ import java.util.*;
 public class HangarPlatform implements Platform {
     private final Logger logger = LoggerProvider.getLogger(getClass());
 
+    public HangarPlatform() {
+        if (CommonPropertyKey.GAME_VERSIONS.isPresent() && HangarPropertyKey.GAME_VERSIONS.isAbsent()) {
+            HangarPropertyKey.GAME_VERSIONS.setValue(CommonPropertyKey.GAME_VERSIONS.getValue());
+        }
+    }
+
     @Override
     public Optional<BatchRunnable> createUploadRunnable(FileBundle fileBundle) {
         if (PropertyKeyUtil.isAbsentAndAnnounce(logger, HangarPropertyKey.KEY, HangarPropertyKey.PROJECT, HangarPropertyKey.PLATFORM, HangarPropertyKey.GAME_VERSIONS)) {

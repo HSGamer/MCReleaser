@@ -7,6 +7,7 @@ import me.hsgamer.mcreleaser.bundle.BundlePlatform;
 import me.hsgamer.mcreleaser.core.file.FileBundle;
 import me.hsgamer.mcreleaser.core.property.CommonPropertyKey;
 import me.hsgamer.mcreleaser.core.util.PathUtil;
+import me.hsgamer.mcreleaser.core.util.PropertyKeyUtil;
 import me.hsgamer.mcreleaser.core.util.StringUtil;
 import me.hsgamer.mcreleaser.core.util.Validate;
 
@@ -24,7 +25,9 @@ public class DockerExecutor {
 
         BundlePlatform bundlePlatform = new BundlePlatform(platforms, runSync);
 
-        CommonPropertyKey.checkPresent();
+        if (PropertyKeyUtil.isAbsentAndAnnounce(LoggerProvider.getLogger(DockerExecutor.class), CommonPropertyKey.NAME, CommonPropertyKey.VERSION, CommonPropertyKey.DESCRIPTION)) {
+            return;
+        }
 
         FileBundle fileBundle = getFileBundle();
         Optional<BatchRunnable> optional = bundlePlatform.createUploadRunnable(fileBundle);

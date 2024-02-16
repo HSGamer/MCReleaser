@@ -27,6 +27,12 @@ import java.util.Optional;
 public class ModrinthPlatform implements Platform {
     private final Logger logger = LoggerProvider.getLogger(getClass());
 
+    public ModrinthPlatform() {
+        if (CommonPropertyKey.GAME_VERSIONS.isPresent() && ModrinthPropertyKey.GAME_VERSIONS.isAbsent()) {
+            ModrinthPropertyKey.GAME_VERSIONS.setValue(CommonPropertyKey.GAME_VERSIONS.getValue());
+        }
+    }
+
     @Override
     public Optional<BatchRunnable> createUploadRunnable(FileBundle fileBundle) {
         if (PropertyKeyUtil.isAbsentAndAnnounce(logger, ModrinthPropertyKey.TOKEN, ModrinthPropertyKey.PROJECT, ModrinthPropertyKey.LOADERS, ModrinthPropertyKey.GAME_VERSIONS)) {
