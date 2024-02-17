@@ -2,7 +2,35 @@
 
 A program to publish artifacts to multiple Minecraft-related platforms
 
-> For Github Actions, see [action-mcreleaser](https://github.com/HSGamer/action-mcreleaser)
+## Usage
+
+### CLI
+
+```shell
+java 
+    -Dname="Artifact Name"
+    -Dversion="Artifact Version"
+    -Ddescription="Artifact Description"
+    -DgameVersions="Game Versions"
+    -jar mcreleaser.jar
+```
+
+> Use `-D` to set environment variables as properties in camel case, e.g., `GITHUB_TOKEN` becomes `-DgithubToken`
+
+### Docker
+
+```shell
+docker run
+    -e NAME="Artifact Name"
+    -e VERSION="Artifact Version"
+    -e DESCRIPTION="Artifact Description"
+    -e GAME_VERSIONS="Game Versions"
+    ghcr.io/hsgamer/mcreleaser:master
+```
+
+### Github Actions
+
+Check [action-mcreleaser](https://github.com/HSGamer/action-mcreleaser)
 
 ## Environment Variables
 
