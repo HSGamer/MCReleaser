@@ -44,7 +44,7 @@ Check [action-mcreleaser](https://github.com/HSGamer/action-mcreleaser)
 | `GAME_VERSIONS`        | The game versions that the artifact supports | No       |         |
 | `ANNOUNCE_MISSING_KEY` | Whether to announce the missing variables    | No       | `false` |
 
-### Github
+### [Github](https://github.com/)
 
 | Name                | Description                                     | Required | Default |
 |---------------------|-------------------------------------------------|----------|---------|
@@ -54,7 +54,7 @@ Check [action-mcreleaser](https://github.com/HSGamer/action-mcreleaser)
 | `GITHUB_DRAFT`      | Whether to publish the artifact as a draft      | No       | `false` |
 | `GITHUB_PRERELEASE` | Whether to publish the artifact as a prerelease | No       | `false` |
 
-### Hangar
+### [Hangar](https://hangar.papermc.io/)
 
 | Name                   | Description                                                                       | Required | Default |
 |------------------------|-----------------------------------------------------------------------------------|----------|---------|
@@ -65,7 +65,7 @@ Check [action-mcreleaser](https://github.com/HSGamer/action-mcreleaser)
 | `HANGAR_PLATFORM`      | The Hangar platform to publish the artifact                                       | No       | Release |
 | `DEPENDENCIES`         | The dependencies of the artifact                                                  | No       |         |
 
-### Modrinth
+### [Modrinth](https://modrinth.com/)
 
 | Name                     | Description                                                                       | Required | Default |
 |--------------------------|-----------------------------------------------------------------------------------|----------|---------|
@@ -78,7 +78,7 @@ Check [action-mcreleaser](https://github.com/HSGamer/action-mcreleaser)
 | `MODRINTH_FEATURED`      | Whether to feature the artifact                                                   | No       | `true`  |
 | `MODRINTH_UNFEATURE`     | Whether to unfeature other versions                                               | No       | `true`  |
 
-### Polymart
+### [Polymart](https://polymart.org/)
 
 | Name                | Description                                   | Required | Default |
 |---------------------|-----------------------------------------------|----------|---------|
