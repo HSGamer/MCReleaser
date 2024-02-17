@@ -168,11 +168,21 @@ public class HangarPlatform implements Platform {
                 if (success) {
                     logger.info("Uploaded version");
                 }
-                process.complete();
+                process.next();
             } catch (IOException e) {
                 logger.error("Failed to upload version", e);
                 process.complete();
             }
+        });
+        uploadPool.addLast(process -> {
+            CloseableHttpClient client = (CloseableHttpClient) process.getData().get("client");
+            try {
+                client.close();
+                logger.info("Closed client");
+            } catch (IOException e) {
+                logger.error("Failed to close client", e);
+            }
+            process.complete();
         });
 
         return Optional.of(batchRunnable);
