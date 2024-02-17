@@ -43,7 +43,11 @@ public class ModrinthPlatform implements Platform {
         BatchRunnable batchRunnable = new BatchRunnable();
         TaskPool preparePool = batchRunnable.getTaskPool(0);
         preparePool.addLast(process -> {
-            ModrinthAPI api = ModrinthAPI.rateLimited(UserAgent.builder().build(), ModrinthPropertyKey.TOKEN.getValue());
+            UserAgent userAgent = UserAgent.builder()
+                    .projectName(CommonPropertyKey.NAME.getValue())
+                    .projectVersion(CommonPropertyKey.VERSION.getValue())
+                    .build();
+            ModrinthAPI api = ModrinthAPI.rateLimited(userAgent, ModrinthPropertyKey.TOKEN.getValue());
             process.getData().put("api", api);
             logger.info("Modrinth API is ready");
             process.next();
