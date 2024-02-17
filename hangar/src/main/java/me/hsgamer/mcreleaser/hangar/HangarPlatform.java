@@ -74,6 +74,7 @@ public class HangarPlatform implements Platform {
                 }
                 process.getData().put("token", apiSession.token());
                 logger.info("Got token");
+                process.next();
             } catch (IOException e) {
                 logger.error("Failed to get token", e);
                 process.complete();
