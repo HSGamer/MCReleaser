@@ -1,9 +1,8 @@
 package me.hsgamer.mcreleaser.core.util;
 
-import me.hsgamer.hscore.logger.common.LogLevel;
-import me.hsgamer.hscore.logger.common.Logger;
 import me.hsgamer.mcreleaser.core.property.CommonPropertyKey;
 import me.hsgamer.mcreleaser.core.property.PropertyKey;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +25,7 @@ public class PropertyKeyUtil {
                     builder.append(missingKey.getKey()).append(", ");
                 }
                 builder.delete(builder.length() - 2, builder.length());
-                logger.log(LogLevel.ERROR, builder.toString());
+                logger.error(builder.toString());
             }
             return true;
         }

@@ -1,8 +1,5 @@
 package me.hsgamer.mcreleaser.github;
 
-import me.hsgamer.hscore.logger.common.LogLevel;
-import me.hsgamer.hscore.logger.common.Logger;
-import me.hsgamer.hscore.logger.provider.LoggerProvider;
 import me.hsgamer.hscore.task.BatchRunnable;
 import me.hsgamer.hscore.task.element.TaskPool;
 import me.hsgamer.mcreleaser.core.file.FileBundle;
@@ -13,12 +10,14 @@ import org.kohsuke.github.GHRelease;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 import org.kohsuke.github.GitHubBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.Optional;
 
 public class GithubPlatform implements Platform {
-    private final Logger logger = LoggerProvider.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public GithubPlatform() {
         if (GithubPropertyKey.REF.isPresent()) {
@@ -49,10 +48,10 @@ public class GithubPlatform implements Platform {
             try {
                 GitHub gitHub = new GitHubBuilder().withOAuthToken(GithubPropertyKey.TOKEN.getValue()).build();
                 process.getData().put("github", gitHub);
-                logger.log(LogLevel.INFO, "GitHub instance created");
+                logger.info("GitHub instance created");
                 process.next();
             } catch (Exception e) {
-                logger.log(LogLevel.ERROR, "Failed to create GitHub instance", e);
+                logger.error("Failed to create GitHub instance", e);
                 process.complete();
             }
         });
@@ -60,10 +59,10 @@ public class GithubPlatform implements Platform {
             try {
                 GHRepository repository = ((GitHub) process.getData().get("github")).getRepository(GithubPropertyKey.REPOSITORY.getValue());
                 process.getData().put("repository", repository);
-                logger.log(LogLevel.INFO, "Repository instance created");
+                logger.info("Repository instance created");
                 process.next();
             } catch (Exception e) {
-                logger.log(LogLevel.ERROR, "Failed to get the repository", e);
+                logger.error("Failed to get the repository", e);
                 process.complete();
             }
         });
@@ -80,14 +79,14 @@ public class GithubPlatform implements Platform {
                             .name(CommonPropertyKey.NAME.getValue())
                             .body(CommonPropertyKey.DESCRIPTION.getValue())
                             .create();
-                    logger.log(LogLevel.INFO, "Release created");
+                    logger.info("Release created");
                 } else {
-                    logger.log(LogLevel.INFO, "Release already exists");
+                    logger.info("Release already exists");
                 }
                 process.getData().put("release", release);
                 process.next();
             } catch (Exception e) {
-                logger.log(LogLevel.ERROR, "Failed to create the release", e);
+                logger.error("Failed to create the release", e);
                 process.complete();
             }
         });
@@ -98,13 +97,13 @@ public class GithubPlatform implements Platform {
                 GHRelease release = (GHRelease) process.getData().get("release");
                 for (File file : fileBundle.allFiles()) {
                     release.uploadAsset(file, "application/octet-stream");
-                    logger.log(LogLevel.INFO, "File uploaded: " + file.getName());
+                    logger.info("File uploaded: " + file.getName());
                 }
-                logger.log(LogLevel.INFO, "All files uploaded");
-                logger.log(LogLevel.INFO, "Release URL: " + release.getHtmlUrl());
+                logger.info("All files uploaded");
+                logger.info("Release URL: " + release.getHtmlUrl());
                 process.next();
             } catch (Exception e) {
-                logger.log(LogLevel.ERROR, "Failed to upload the file", e);
+                logger.error("Failed to upload the file", e);
                 process.complete();
             }
         });

@@ -8,9 +8,6 @@ import masecla.modrinth4j.endpoints.version.GetProjectVersions;
 import masecla.modrinth4j.endpoints.version.ModifyVersion;
 import masecla.modrinth4j.main.ModrinthAPI;
 import masecla.modrinth4j.model.version.ProjectVersion;
-import me.hsgamer.hscore.logger.common.LogLevel;
-import me.hsgamer.hscore.logger.common.Logger;
-import me.hsgamer.hscore.logger.provider.LoggerProvider;
 import me.hsgamer.hscore.task.BatchRunnable;
 import me.hsgamer.hscore.task.element.TaskPool;
 import me.hsgamer.mcreleaser.core.file.FileBundle;
@@ -18,6 +15,8 @@ import me.hsgamer.mcreleaser.core.platform.Platform;
 import me.hsgamer.mcreleaser.core.property.CommonPropertyKey;
 import me.hsgamer.mcreleaser.core.util.PropertyKeyUtil;
 import me.hsgamer.mcreleaser.core.util.StringUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -25,7 +24,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class ModrinthPlatform implements Platform {
-    private final Logger logger = LoggerProvider.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public ModrinthPlatform() {
         if (CommonPropertyKey.GAME_VERSIONS.isPresent() && ModrinthPropertyKey.GAME_VERSIONS.isAbsent()) {
@@ -46,7 +45,7 @@ public class ModrinthPlatform implements Platform {
         preparePool.addLast(process -> {
             ModrinthAPI api = ModrinthAPI.rateLimited(UserAgent.builder().build(), ModrinthPropertyKey.TOKEN.getValue());
             process.getData().put("api", api);
-            logger.log(LogLevel.INFO, "Modrinth API is ready");
+            logger.info("Modrinth API is ready");
             process.next();
         });
 
@@ -69,7 +68,7 @@ public class ModrinthPlatform implements Platform {
                     ProjectVersion.VersionType versionType = ProjectVersion.VersionType.valueOf(versionTypeString.toUpperCase());
                     builder.versionType(versionType);
                 } catch (IllegalArgumentException e) {
-                    logger.log(LogLevel.ERROR, "Invalid version type: " + versionTypeString, e);
+                    logger.error("Invalid version type: " + versionTypeString, e);
                     process.complete();
                     return;
                 }
@@ -82,7 +81,7 @@ public class ModrinthPlatform implements Platform {
                     List<ProjectVersion.ProjectDependency> dependencies = gson.fromJson(ModrinthPropertyKey.DEPENDENCIES.getValue(), typeToken.getType());
                     builder.dependencies(dependencies);
                 } catch (Exception e) {
-                    logger.log(LogLevel.ERROR, "Invalid dependencies", e);
+                    logger.error("Invalid dependencies", e);
                     process.complete();
                     return;
                 }
@@ -100,7 +99,7 @@ public class ModrinthPlatform implements Platform {
             builder.primaryFile(fileBundle.primaryFile().getName());
 
             process.getData().put("request", builder.build());
-            logger.log(LogLevel.INFO, "The request is ready");
+            logger.info("The request is ready");
             process.next();
         });
 
@@ -113,7 +112,7 @@ public class ModrinthPlatform implements Platform {
                     .getProjectVersions(projectId, GetProjectVersions.GetProjectVersionsRequest.builder().featured(true).build())
                     .whenComplete((projectVersions, throwable) -> {
                         if (throwable != null) {
-                            logger.log(LogLevel.ERROR, "Failed to get all featured versions", throwable);
+                            logger.error("Failed to get all featured versions", throwable);
                             process.complete();
                             return;
                         }
@@ -122,9 +121,9 @@ public class ModrinthPlatform implements Platform {
                         projectVersions.forEach(projectVersion -> taskPool.addLast(process1 -> api.versions().modifyProjectVersion(projectVersion.getId(), ModifyVersion.ModifyVersionRequest.builder().featured(false).build())
                                 .whenComplete((aVoid, throwable1) -> {
                                     if (throwable1 != null) {
-                                        logger.log(LogLevel.ERROR, "Failed to un-feature version: " + projectVersion.getId(), throwable1);
+                                        logger.error("Failed to un-feature version: " + projectVersion.getId(), throwable1);
                                     } else {
-                                        logger.log(LogLevel.INFO, "Un-featured version: " + projectVersion.getId());
+                                        logger.info("Un-featured version: " + projectVersion.getId());
                                     }
                                     process1.next();
                                 })));
@@ -139,9 +138,9 @@ public class ModrinthPlatform implements Platform {
             CreateVersion.CreateVersionRequest request = (CreateVersion.CreateVersionRequest) process.getData().get("request");
             api.versions().createProjectVersion(request).whenComplete((projectVersion, throwable) -> {
                 if (throwable != null) {
-                    logger.log(LogLevel.ERROR, "Failed to upload the version", throwable);
+                    logger.info("Failed to upload the version", throwable);
                 } else {
-                    logger.log(LogLevel.INFO, "Uploaded the version: " + projectVersion.getId());
+                    logger.info("Uploaded the version: " + projectVersion.getId());
                 }
                 process.complete();
             });

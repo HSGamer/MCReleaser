@@ -21,6 +21,7 @@
 
     <properties>
         <core.version>4.3.29</core.version>
+        <slf4j.version>2.0.7</slf4j.version>
         <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -41,11 +42,10 @@
 
     <dependencies>
         <dependency>
-            <groupId>me.hsgamer</groupId>
-            <artifactId>hscore-logger-provider</artifactId>
-            <version>${core.version}</version>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>

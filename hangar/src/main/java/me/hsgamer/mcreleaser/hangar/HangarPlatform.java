@@ -2,9 +2,6 @@ package me.hsgamer.mcreleaser.hangar;
 
 import com.github.mizosoft.methanol.*;
 import com.google.gson.reflect.TypeToken;
-import me.hsgamer.hscore.logger.common.LogLevel;
-import me.hsgamer.hscore.logger.common.Logger;
-import me.hsgamer.hscore.logger.provider.LoggerProvider;
 import me.hsgamer.hscore.task.BatchRunnable;
 import me.hsgamer.hscore.task.element.TaskPool;
 import me.hsgamer.mcreleaser.core.file.FileBundle;
@@ -15,6 +12,8 @@ import me.hsgamer.mcreleaser.core.util.StringUtil;
 import me.hsgamer.mcreleaser.hangar.adapter.GsonAdapter;
 import me.hsgamer.mcreleaser.hangar.model.ApiSession;
 import me.hsgamer.mcreleaser.hangar.model.VersionUpload;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.net.URI;
@@ -25,7 +24,7 @@ import java.util.*;
 
 public class HangarPlatform implements Platform {
     private final String baseUrl = "https://hangar.papermc.io/api/v1";
-    private final Logger logger = LoggerProvider.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public HangarPlatform() {
         if (CommonPropertyKey.GAME_VERSIONS.isPresent() && HangarPropertyKey.GAME_VERSIONS.isAbsent()) {
@@ -44,7 +43,7 @@ public class HangarPlatform implements Platform {
         connectPool.addLast(process -> {
             HttpClient client = HttpClient.newBuilder().build();
             process.getData().put("client", client);
-            logger.log(LogLevel.INFO, "Prepared client");
+            logger.info("Prepared client");
             process.next();
         });
         connectPool.addLast(process -> {
@@ -55,17 +54,17 @@ public class HangarPlatform implements Platform {
             client.sendAsync(tokenRequest, MoreBodyHandlers.ofObject(ApiSession.class))
                     .whenComplete((response, throwable) -> {
                         if (throwable != null) {
-                            logger.log(LogLevel.ERROR, "Failed to get token", throwable);
+                            logger.error("Failed to get token", throwable);
                             process.complete();
                             return;
                         }
                         if (response.statusCode() != 200) {
-                            logger.log(LogLevel.ERROR, "Failed to get token: " + response.statusCode());
+                            logger.error("Failed to get token: " + response.statusCode());
                             process.complete();
                             return;
                         }
                         process.getData().put("token", response.body().token());
-                        logger.log(LogLevel.INFO, "Got token");
+                        logger.info("Got token");
                         process.next();
                     });
         });
@@ -90,7 +89,7 @@ public class HangarPlatform implements Platform {
             try {
                 hangarPlatform = VersionUpload.Platform.valueOf(platformValue.toUpperCase());
             } catch (IllegalArgumentException e) {
-                logger.log(LogLevel.ERROR, "Invalid platform: " + platformValue, e);
+                logger.error("Invalid platform: " + platformValue, e);
                 process.complete();
                 return;
             }
@@ -106,7 +105,7 @@ public class HangarPlatform implements Platform {
                 try {
                     pluginDependencies = GsonAdapter.INSTANCE.fromJson(HangarPropertyKey.DEPENDENCIES.getValue(), typeToken.getType());
                 } catch (Exception e) {
-                    logger.log(LogLevel.ERROR, "Invalid dependencies", e);
+                    logger.error("Invalid dependencies", e);
                     process.complete();
                     return;
                 }
@@ -126,7 +125,7 @@ public class HangarPlatform implements Platform {
             );
 
             process.getData().put("versionUpload", versionUpload);
-            logger.log(LogLevel.INFO, "Prepared version");
+            logger.info("Prepared version");
             process.next();
         });
 
@@ -145,7 +144,7 @@ public class HangarPlatform implements Platform {
                         .filePart("files", fileBundle.primaryFile().toPath(), MediaType.APPLICATION_OCTET_STREAM)
                         .build();
             } catch (FileNotFoundException e) {
-                logger.log(LogLevel.ERROR, "File not found", e);
+                logger.error("File not found", e);
                 process.complete();
                 return;
             }
@@ -159,16 +158,16 @@ public class HangarPlatform implements Platform {
             client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                     .whenComplete((response, throwable) -> {
                         if (throwable != null) {
-                            logger.log(LogLevel.ERROR, "Failed to upload version", throwable);
+                            logger.error("Failed to upload version", throwable);
                             process.complete();
                             return;
                         }
                         if (response.statusCode() != 200) {
-                            logger.log(LogLevel.ERROR, "Failed to upload version: " + response.statusCode() + " - " + response.body());
+                            logger.error("Failed to upload version: " + response.statusCode() + " - " + response.body());
                             process.complete();
                             return;
                         }
-                        logger.log(LogLevel.INFO, "Uploaded version");
+                        logger.info("Uploaded version");
                         process.complete();
                     });
         });

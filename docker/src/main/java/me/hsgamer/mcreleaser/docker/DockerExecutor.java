@@ -1,7 +1,5 @@
 package me.hsgamer.mcreleaser.docker;
 
-import me.hsgamer.hscore.logger.provider.LoggerProvider;
-import me.hsgamer.hscore.logger.system.SystemLogger;
 import me.hsgamer.hscore.task.BatchRunnable;
 import me.hsgamer.mcreleaser.bundle.BundlePlatform;
 import me.hsgamer.mcreleaser.core.file.FileBundle;
@@ -10,22 +8,19 @@ import me.hsgamer.mcreleaser.core.util.PathUtil;
 import me.hsgamer.mcreleaser.core.util.PropertyKeyUtil;
 import me.hsgamer.mcreleaser.core.util.StringUtil;
 import me.hsgamer.mcreleaser.core.util.Validate;
+import org.slf4j.LoggerFactory;
 
 import java.nio.file.Paths;
 import java.util.Optional;
 
 public class DockerExecutor {
-    static {
-        LoggerProvider.setLoggerProvider(SystemLogger::new);
-    }
-
     public static void main(String[] args) {
         String platforms = DockerPropertyKey.PLATFORMS.getValue("all");
         boolean runSync = DockerPropertyKey.SYNC.asBoolean(false);
 
         BundlePlatform bundlePlatform = new BundlePlatform(platforms, runSync);
 
-        if (PropertyKeyUtil.isAbsentAndAnnounce(LoggerProvider.getLogger(DockerExecutor.class), CommonPropertyKey.NAME, CommonPropertyKey.VERSION, CommonPropertyKey.DESCRIPTION)) {
+        if (PropertyKeyUtil.isAbsentAndAnnounce(LoggerFactory.getLogger(DockerExecutor.class), CommonPropertyKey.NAME, CommonPropertyKey.VERSION, CommonPropertyKey.DESCRIPTION)) {
             return;
         }
 

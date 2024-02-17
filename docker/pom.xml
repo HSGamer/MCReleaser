@@ -11,6 +11,10 @@
 
     <artifactId>mc-releaser-docker</artifactId>
 
+    <properties>
+        <tinylog.version>2.7.0</tinylog.version>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
@@ -45,9 +49,19 @@
         </dependency>
 
         <dependency>
-            <groupId>me.hsgamer</groupId>
-            <artifactId>hscore-logger-system</artifactId>
-            <version>${core.version}</version>
+            <groupId>org.tinylog</groupId>
+            <artifactId>tinylog-api</artifactId>
+            <version>${tinylog.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.tinylog</groupId>
+            <artifactId>tinylog-impl</artifactId>
+            <version>${tinylog.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.tinylog</groupId>
+            <artifactId>slf4j-tinylog</artifactId>
+            <version>${tinylog.version}</version>
         </dependency>
     </dependencies>
 </project>
