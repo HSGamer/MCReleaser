@@ -8,6 +8,7 @@ import me.hsgamer.mcreleaser.core.util.StringUtil;
 import me.hsgamer.mcreleaser.github.GithubPlatform;
 import me.hsgamer.mcreleaser.hangar.HangarPlatform;
 import me.hsgamer.mcreleaser.modrinth.ModrinthPlatform;
+import me.hsgamer.mcreleaser.polymart.PolymartPlatform;
 
 import java.util.List;
 import java.util.Map;
@@ -21,7 +22,8 @@ public class BundlePlatform implements Platform {
     private static final Map<String, Supplier<Platform>> PLATFORM_MAP = Map.ofEntries(
             Map.entry("github", GithubPlatform::new),
             Map.entry("modrinth", ModrinthPlatform::new),
-            Map.entry("hangar", HangarPlatform::new)
+            Map.entry("hangar", HangarPlatform::new),
+            Map.entry("polymart", PolymartPlatform::new)
     );
 
     private final boolean runSync;
