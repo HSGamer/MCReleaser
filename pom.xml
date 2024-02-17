@@ -11,7 +11,7 @@
     <modules>
         <module>core</module>
         <module>bundle</module>
-        <module>docker</module>
+        <module>cli</module>
 
         <!-- Platform-specific modules -->
         <module>github</module>

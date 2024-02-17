@@ -1,4 +1,4 @@
-package me.hsgamer.mcreleaser.docker;
+package me.hsgamer.mcreleaser.cli;
 
 import me.hsgamer.hscore.task.BatchRunnable;
 import me.hsgamer.mcreleaser.bundle.BundlePlatform;
@@ -13,14 +13,14 @@ import org.slf4j.LoggerFactory;
 import java.nio.file.Paths;
 import java.util.Optional;
 
-public class DockerExecutor {
+public class CLIExecutor {
     public static void main(String[] args) {
-        String platforms = DockerPropertyKey.PLATFORMS.getValue("all");
-        boolean runSync = DockerPropertyKey.SYNC.asBoolean(false);
+        String platforms = CLIPropertyKey.PLATFORMS.getValue("all");
+        boolean runSync = CLIPropertyKey.SYNC.asBoolean(false);
 
         BundlePlatform bundlePlatform = new BundlePlatform(platforms, runSync);
 
-        if (PropertyKeyUtil.isAbsentAndAnnounce(LoggerFactory.getLogger(DockerExecutor.class), CommonPropertyKey.NAME, CommonPropertyKey.VERSION, CommonPropertyKey.DESCRIPTION)) {
+        if (PropertyKeyUtil.isAbsentAndAnnounce(LoggerFactory.getLogger(CLIExecutor.class), CommonPropertyKey.NAME, CommonPropertyKey.VERSION, CommonPropertyKey.DESCRIPTION)) {
             return;
         }
 
@@ -35,7 +35,7 @@ public class DockerExecutor {
     }
 
     private static FileBundle getFileBundle() {
-        String fileGlobs = DockerPropertyKey.FILES.getValue();
+        String fileGlobs = CLIPropertyKey.FILES.getValue();
         Validate.check(fileGlobs != null, "File globs not found");
         return PathUtil.getFileBundle(Paths.get("."), StringUtil.splitSpace(fileGlobs));
     }
