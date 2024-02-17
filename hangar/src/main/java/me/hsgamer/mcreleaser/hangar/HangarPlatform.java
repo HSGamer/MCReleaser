@@ -1,6 +1,6 @@
 package me.hsgamer.mcreleaser.hangar;
 
-import com.github.mizosoft.methanol.*;
+import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import me.hsgamer.hscore.task.BatchRunnable;
 import me.hsgamer.hscore.task.element.TaskPool;
@@ -9,17 +9,19 @@ import me.hsgamer.mcreleaser.core.platform.Platform;
 import me.hsgamer.mcreleaser.core.property.CommonPropertyKey;
 import me.hsgamer.mcreleaser.core.util.PropertyKeyUtil;
 import me.hsgamer.mcreleaser.core.util.StringUtil;
-import me.hsgamer.mcreleaser.hangar.adapter.GsonAdapter;
 import me.hsgamer.mcreleaser.hangar.model.ApiSession;
 import me.hsgamer.mcreleaser.hangar.model.VersionUpload;
+import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileNotFoundException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.io.IOException;
 import java.util.*;
 
 public class HangarPlatform implements Platform {
@@ -38,10 +40,12 @@ public class HangarPlatform implements Platform {
             return Optional.empty();
         }
 
+        Gson gson = new Gson();
+
         BatchRunnable batchRunnable = new BatchRunnable();
         TaskPool connectPool = batchRunnable.getTaskPool(0);
         connectPool.addLast(process -> {
-            HttpClient client = HttpClient.newBuilder().build();
+            CloseableHttpClient client = HttpClients.createMinimal();
             process.getData().put("client", client);
             logger.info("Prepared client");
             process.next();
@@ -50,23 +54,30 @@ public class HangarPlatform implements Platform {
             HttpClient client = (HttpClient) process.getData().get("client");
             String key = HangarPropertyKey.KEY.getValue();
 
-            MutableRequest tokenRequest = MutableRequest.POST(baseUrl + "/authenticate?apiKey=" + key, HttpRequest.BodyPublishers.noBody());
-            client.sendAsync(tokenRequest, MoreBodyHandlers.ofObject(ApiSession.class))
-                    .whenComplete((response, throwable) -> {
-                        if (throwable != null) {
-                            logger.error("Failed to get token", throwable);
-                            process.complete();
-                            return;
-                        }
-                        if (response.statusCode() != 200) {
-                            logger.error("Failed to get token: " + response.statusCode());
-                            process.complete();
-                            return;
-                        }
-                        process.getData().put("token", response.body().token());
-                        logger.info("Got token");
-                        process.next();
-                    });
+            HttpPost tokenRequest = new HttpPost(baseUrl + "/authenticate?apiKey=" + key);
+            try {
+                ApiSession apiSession = client.execute(tokenRequest, response -> {
+                    if (response.getCode() != 200) {
+                        logger.error("Failed to get token: " + response.getCode());
+                        return null;
+                    }
+                    try {
+                        return gson.fromJson(EntityUtils.toString(response.getEntity()), ApiSession.class);
+                    } catch (Exception e) {
+                        logger.error("Failed to get token", e);
+                        return null;
+                    }
+                });
+                if (apiSession == null) {
+                    process.complete();
+                    return;
+                }
+                process.getData().put("token", apiSession.token());
+                logger.info("Got token");
+            } catch (IOException e) {
+                logger.error("Failed to get token", e);
+                process.complete();
+            }
         });
 
         TaskPool preparePool = batchRunnable.getTaskPool(0);
@@ -103,7 +114,7 @@ public class HangarPlatform implements Platform {
                 TypeToken<List<VersionUpload.PluginDependency>> typeToken = new TypeToken<>() {
                 };
                 try {
-                    pluginDependencies = GsonAdapter.INSTANCE.fromJson(HangarPropertyKey.DEPENDENCIES.getValue(), typeToken.getType());
+                    pluginDependencies = gson.fromJson(HangarPropertyKey.DEPENDENCIES.getValue(), typeToken.getType());
                 } catch (Exception e) {
                     logger.error("Invalid dependencies", e);
                     process.complete();
@@ -137,39 +148,31 @@ public class HangarPlatform implements Platform {
             VersionUpload versionUpload = (VersionUpload) process.getData().get("versionUpload");
             String project = HangarPropertyKey.PROJECT.getValue();
 
-            MultipartBodyPublisher bodyPublisher;
+            MultipartEntityBuilder builder = MultipartEntityBuilder.create()
+                    .addTextBody("versionUpload", gson.toJson(versionUpload), ContentType.APPLICATION_JSON)
+                    .addBinaryBody("files", fileBundle.primaryFile());
+
+            HttpPost request = new HttpPost(baseUrl + "/projects/" + project + "/upload");
+            request.addHeader("Authorization", "Bearer " + token);
+            request.setEntity(builder.build());
+
             try {
-                bodyPublisher = MultipartBodyPublisher.newBuilder()
-                        .formPart("versionUpload", MoreBodyPublishers.ofObject(versionUpload, MediaType.APPLICATION_JSON))
-                        .filePart("files", fileBundle.primaryFile().toPath(), MediaType.APPLICATION_OCTET_STREAM)
-                        .build();
-            } catch (FileNotFoundException e) {
-                logger.error("File not found", e);
+                boolean success = client.execute(request, response -> {
+                    if (response.getCode() != 200) {
+                        String responseBody = EntityUtils.toString(response.getEntity());
+                        logger.error("Failed to upload version: " + response.getCode() + " - " + responseBody);
+                        return false;
+                    }
+                    return true;
+                });
+                if (success) {
+                    logger.info("Uploaded version");
+                }
                 process.complete();
-                return;
+            } catch (IOException e) {
+                logger.error("Failed to upload version", e);
+                process.complete();
             }
-
-            MutableRequest request = MutableRequest.create()
-                    .uri(URI.create(baseUrl + "/projects/" + project + "/upload"))
-                    .header("Authorization", "Bearer " + token)
-                    .header("Content-Type", "multipart/form-data")
-                    .POST(bodyPublisher);
-
-            client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                    .whenComplete((response, throwable) -> {
-                        if (throwable != null) {
-                            logger.error("Failed to upload version", throwable);
-                            process.complete();
-                            return;
-                        }
-                        if (response.statusCode() != 200) {
-                            logger.error("Failed to upload version: " + response.statusCode() + " - " + response.body());
-                            process.complete();
-                            return;
-                        }
-                        logger.info("Uploaded version");
-                        process.complete();
-                    });
         });
 
         return Optional.of(batchRunnable);
