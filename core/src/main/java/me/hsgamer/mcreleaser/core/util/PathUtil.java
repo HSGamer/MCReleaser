@@ -21,15 +21,21 @@ public class PathUtil {
             pathStream
                     .filter(Files::isRegularFile)
                     .forEach(path -> {
+                        File file = path.toFile();
                         Path relativePath = currentPath.relativize(path);
+
                         if (primaryFileMatcher.matches(relativePath)) {
-                            primaryFileRef.set(path.toFile());
-                        } else {
-                            for (PathMatcher secondaryMatcher : secondaryFileMatcher) {
-                                if (secondaryMatcher.matches(relativePath)) {
-                                    secondaryFiles.add(path.toFile());
-                                    break;
-                                }
+                            if (primaryFileRef.get() == null || !secondaryFileMatcher.isEmpty()) {
+                                primaryFileRef.set(file);
+                            } else {
+                                secondaryFiles.add(file);
+                            }
+                        }
+
+                        for (PathMatcher matcher : secondaryFileMatcher) {
+                            if (matcher.matches(relativePath)) {
+                                secondaryFiles.add(file);
+                                return;
                             }
                         }
                     });
