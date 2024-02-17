@@ -48,6 +48,7 @@ A program to publish artifacts to multiple Minecraft-related platforms
 | `MODRINTH_VERSION_TYPE`  | The Modrinth version type to publish the artifact                                 | No       | Release |
 | `MODRINTH_DEPENDENCIES`  | The dependencies of the artifact                                                  | No       |         |
 | `MODRINTH_FEATURED`      | Whether to feature the artifact                                                   | No       | `true`  |
+| `MODRINTH_UNFEATURE`     | Whether to unfeature other versions                                               | No       | `true`  |
 
 ### Polymart
 

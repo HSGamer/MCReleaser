@@ -103,34 +103,36 @@ public class ModrinthPlatform implements Platform {
             process.next();
         });
 
-        TaskPool unfeaturePool = batchRunnable.getTaskPool(2);
-        unfeaturePool.addLast(process -> {
-            ModrinthAPI api = (ModrinthAPI) process.getData().get("api");
-            String projectId = ModrinthPropertyKey.PROJECT.getValue();
+        if (ModrinthPropertyKey.UNFEATURE.asBoolean(true)) {
+            TaskPool unfeaturePool = batchRunnable.getTaskPool(2);
+            unfeaturePool.addLast(process -> {
+                ModrinthAPI api = (ModrinthAPI) process.getData().get("api");
+                String projectId = ModrinthPropertyKey.PROJECT.getValue();
 
-            api.versions()
-                    .getProjectVersions(projectId, GetProjectVersions.GetProjectVersionsRequest.builder().featured(true).build())
-                    .whenComplete((projectVersions, throwable) -> {
-                        if (throwable != null) {
-                            logger.error("Failed to get all featured versions", throwable);
-                            process.complete();
-                            return;
-                        }
+                api.versions()
+                        .getProjectVersions(projectId, GetProjectVersions.GetProjectVersionsRequest.builder().featured(true).build())
+                        .whenComplete((projectVersions, throwable) -> {
+                            if (throwable != null) {
+                                logger.error("Failed to get all featured versions", throwable);
+                                process.complete();
+                                return;
+                            }
 
-                        TaskPool taskPool = process.getCurrentTaskPool();
-                        projectVersions.forEach(projectVersion -> taskPool.addLast(process1 -> api.versions().modifyProjectVersion(projectVersion.getId(), ModifyVersion.ModifyVersionRequest.builder().featured(false).build())
-                                .whenComplete((aVoid, throwable1) -> {
-                                    if (throwable1 != null) {
-                                        logger.error("Failed to un-feature version: " + projectVersion.getId(), throwable1);
-                                    } else {
-                                        logger.info("Un-featured version: " + projectVersion.getId());
-                                    }
-                                    process1.next();
-                                })));
+                            TaskPool taskPool = process.getCurrentTaskPool();
+                            projectVersions.forEach(projectVersion -> taskPool.addLast(process1 -> api.versions().modifyProjectVersion(projectVersion.getId(), ModifyVersion.ModifyVersionRequest.builder().featured(false).build())
+                                    .whenComplete((aVoid, throwable1) -> {
+                                        if (throwable1 != null) {
+                                            logger.error("Failed to un-feature version: " + projectVersion.getId(), throwable1);
+                                        } else {
+                                            logger.info("Un-featured version: " + projectVersion.getId());
+                                        }
+                                        process1.next();
+                                    })));
 
-                        process.next();
-                    });
-        });
+                            process.next();
+                        });
+            });
+        }
 
         TaskPool uploadPool = batchRunnable.getTaskPool(3);
         uploadPool.addLast(process -> {
