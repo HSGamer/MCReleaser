@@ -21,6 +21,7 @@
 
         <!-- Helper modules -->
         <module>html</module>
+        <module>version</module>
     </modules>
 
     <properties>
