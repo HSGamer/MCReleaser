@@ -18,6 +18,9 @@
         <module>modrinth</module>
         <module>hangar</module>
         <module>polymart</module>
+
+        <!-- Helper modules -->
+        <module>html</module>
     </modules>
 
     <properties>

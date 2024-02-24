@@ -1,4 +1,4 @@
-package me.hsgamer.mcreleaser.polymart;
+package me.hsgamer.mcreleaser.html;
 
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;

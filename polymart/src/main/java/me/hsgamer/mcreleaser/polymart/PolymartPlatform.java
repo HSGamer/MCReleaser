@@ -1,12 +1,12 @@
 package me.hsgamer.mcreleaser.polymart;
 
-import com.google.gson.Gson;
 import me.hsgamer.hscore.task.BatchRunnable;
 import me.hsgamer.hscore.task.element.TaskPool;
 import me.hsgamer.mcreleaser.core.file.FileBundle;
 import me.hsgamer.mcreleaser.core.platform.Platform;
 import me.hsgamer.mcreleaser.core.property.CommonPropertyKey;
 import me.hsgamer.mcreleaser.core.util.PropertyKeyUtil;
+import me.hsgamer.mcreleaser.html.MarkdownToHTMLConverter;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
@@ -28,8 +28,6 @@ public class PolymartPlatform implements Platform {
         if (PropertyKeyUtil.isAbsentAndAnnounce(logger, PolymartPropertyKey.KEY, PolymartPropertyKey.RESOURCE)) {
             return Optional.empty();
         }
-
-        Gson gson = new Gson();
 
         BatchRunnable batchRunnable = new BatchRunnable();
         TaskPool connectPool = batchRunnable.getTaskPool(0);
