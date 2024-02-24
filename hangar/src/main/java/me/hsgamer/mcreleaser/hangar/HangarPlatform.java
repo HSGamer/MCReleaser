@@ -12,7 +12,6 @@ import me.hsgamer.mcreleaser.core.util.StringUtil;
 import me.hsgamer.mcreleaser.hangar.model.ApiSession;
 import me.hsgamer.mcreleaser.hangar.model.VersionUpload;
 import me.hsgamer.mcreleaser.version.MinecraftVersionFetcher;
-import me.hsgamer.mcreleaser.version.VersionTypeFilter;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
@@ -79,27 +78,25 @@ public class HangarPlatform implements Platform {
 
         TaskPool preparePool = batchRunnable.getTaskPool(0);
         preparePool.addLast(process -> {
-            List<String> gameVersionFilters = Arrays.asList(StringUtil.splitSpace(CommonPropertyKey.GAME_VERSIONS.getValue()));
-            VersionTypeFilter gameVersionTypeFilter = VersionTypeFilter.RELEASE;
-            if (CommonPropertyKey.GAME_VERSION_TYPE.isPresent()) {
-                try {
-                    gameVersionTypeFilter = VersionTypeFilter.valueOf(CommonPropertyKey.GAME_VERSION_TYPE.getValue().toUpperCase());
-                } catch (IllegalArgumentException e) {
-                    logger.error("Invalid version type: " + CommonPropertyKey.GAME_VERSION_TYPE.getValue(), e);
-                    process.complete();
-                    return;
-                }
-            }
-            MinecraftVersionFetcher.fetchVersionIds(gameVersionFilters, gameVersionTypeFilter).whenComplete((versionIds, throwable) -> {
+            MinecraftVersionFetcher.fetchVersionManifest().whenComplete((versionManifest, throwable) -> {
                 if (throwable != null) {
-                    logger.error("Failed to fetch version ids", throwable);
+                    logger.error("Failed to fetch version manifest", throwable);
                     process.complete();
                     return;
                 }
-                process.getData().put("versionIds", versionIds);
-                logger.info("The version ids are ready");
+
+                List<String> gameVersions = Arrays.asList(StringUtil.splitSpace(CommonPropertyKey.GAME_VERSIONS.getValue()));
+                String latestVersion = versionManifest.latest().release();
+                List<String> finalGameVersions = gameVersions.stream()
+                        .map(version -> version
+                                .replace("latest", latestVersion)
+                                .replace("..", "-")
+                        )
+                        .toList();
+                process.getData().put("versionIds", finalGameVersions);
                 process.next();
             });
+
         });
         preparePool.addLast(process -> {
             String channel = HangarPropertyKey.CHANNEL.getValue("Release");
