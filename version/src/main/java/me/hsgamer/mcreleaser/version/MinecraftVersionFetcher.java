@@ -60,7 +60,7 @@ public class MinecraftVersionFetcher {
         List<VersionManifest.Version> versions = new ArrayList<>();
         List<VersionManifest.Version> fetchedVersions = versionManifest.versions();
         for (String versionFilter : versionFilters) {
-            String[] split = versionFilter.split("-");
+            String[] split = versionFilter.split("\\.\\.");
             if (split.length == 2) {
                 String start = split[0];
                 String end = split[1];
