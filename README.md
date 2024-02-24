@@ -41,7 +41,6 @@ Check [action-mcreleaser](https://github.com/HSGamer/action-mcreleaser)
 | `NAME`                 | The name of the artifact                     | Yes      |         |
 | `VERSION`              | The version of the artifact                  | Yes      |         |
 | `DESCRIPTION`          | The description of the artifact              | Yes      |         |
-| `GAME_VERSIONS`        | The game versions that the artifact supports | No       |         |
 | `ANNOUNCE_MISSING_KEY` | Whether to announce the missing variables    | No       | `false` |
 
 ### [Github](https://github.com/)
@@ -56,27 +55,29 @@ Check [action-mcreleaser](https://github.com/HSGamer/action-mcreleaser)
 
 ### [Hangar](https://hangar.papermc.io/)
 
-| Name                   | Description                                                                       | Required | Default |
-|------------------------|-----------------------------------------------------------------------------------|----------|---------|
-| `HANGAR_KEY`           | The Hangar API key to publish the artifact                                        | Yes      |         |
-| `HANGAR_PROJECT`       | The Hangar project to publish the artifact                                        | Yes      |         |
-| `HANGAR_CHANNEL`       | The Hangar channel to publish the artifact                                        | Yes      |         |
-| `HANGAR_GAME_VERSIONS` | The game versions that the artifact supports <br> Will use `GAME_VERSIONS` if set | Yes      |         |
-| `HANGAR_PLATFORM`      | The Hangar platform to publish the artifact                                       | No       | Release |
-| `DEPENDENCIES`         | The dependencies of the artifact                                                  | No       |         |
+| Name                | Description                                  | Required | Default |
+|---------------------|----------------------------------------------|----------|---------|
+| `HANGAR_KEY`        | The Hangar API key to publish the artifact   | Yes      |         |
+| `HANGAR_PROJECT`    | The Hangar project to publish the artifact   | Yes      |         |
+| `HANGAR_CHANNEL`    | The Hangar channel to publish the artifact   | Yes      |         |
+| `GAME_VERSIONS`     | The game versions that the artifact supports | Yes      |         |
+| `HANGAR_PLATFORM`   | The Hangar platform to publish the artifact  | No       | Release |
+| `DEPENDENCIES`      | The dependencies of the artifact             | No       |         |
+| `GAME_VERSION_TYPE` | The type of the game version to filter       | No       | Release |
 
 ### [Modrinth](https://modrinth.com/)
 
-| Name                     | Description                                                                       | Required | Default |
-|--------------------------|-----------------------------------------------------------------------------------|----------|---------|
-| `MODRINTH_TOKEN`         | The Modrinth token to publish the artifact                                        | Yes      |         |
-| `MODRINTH_PROJECT`       | The Modrinth project to publish the artifact                                      | Yes      |         |
-| `MODRINTH_GAME_VERSIONS` | The game versions that the artifact supports <br> Will use `GAME_VERSIONS` if set | Yes      |         |
-| `MODRINTH_LOADERS`       | The loaders that the artifact supports                                            | Yes      |         |
-| `MODRINTH_VERSION_TYPE`  | The Modrinth version type to publish the artifact                                 | No       | Release |
-| `MODRINTH_DEPENDENCIES`  | The dependencies of the artifact                                                  | No       |         |
-| `MODRINTH_FEATURED`      | Whether to feature the artifact                                                   | No       | `true`  |
-| `MODRINTH_UNFEATURE`     | Whether to unfeature other versions                                               | No       | `true`  |
+| Name                    | Description                                       | Required | Default |
+|-------------------------|---------------------------------------------------|----------|---------|
+| `MODRINTH_TOKEN`        | The Modrinth token to publish the artifact        | Yes      |         |
+| `MODRINTH_PROJECT`      | The Modrinth project to publish the artifact      | Yes      |         |
+| `GAME_VERSIONS`         | The game versions that the artifact supports      | Yes      |         |
+| `MODRINTH_LOADERS`      | The loaders that the artifact supports            | Yes      |         |
+| `MODRINTH_VERSION_TYPE` | The Modrinth version type to publish the artifact | No       | Release |
+| `MODRINTH_DEPENDENCIES` | The dependencies of the artifact                  | No       |         |
+| `MODRINTH_FEATURED`     | Whether to feature the artifact                   | No       | `true`  |
+| `MODRINTH_UNFEATURE`    | Whether to unfeature other versions               | No       | `true`  |
+| `GAME_VERSION_TYPE`     | The type of the game version to filter            | No       | Release |
 
 ### [Polymart](https://polymart.org/)
 

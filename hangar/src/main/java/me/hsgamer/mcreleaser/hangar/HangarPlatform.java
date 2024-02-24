@@ -11,6 +11,8 @@ import me.hsgamer.mcreleaser.core.util.PropertyKeyUtil;
 import me.hsgamer.mcreleaser.core.util.StringUtil;
 import me.hsgamer.mcreleaser.hangar.model.ApiSession;
 import me.hsgamer.mcreleaser.hangar.model.VersionUpload;
+import me.hsgamer.mcreleaser.version.MinecraftVersionFetcher;
+import me.hsgamer.mcreleaser.version.VersionTypeFilter;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
@@ -28,15 +30,9 @@ public class HangarPlatform implements Platform {
     private final String baseUrl = "https://hangar.papermc.io/api/v1";
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public HangarPlatform() {
-        if (CommonPropertyKey.GAME_VERSIONS.isPresent() && HangarPropertyKey.GAME_VERSIONS.isAbsent()) {
-            HangarPropertyKey.GAME_VERSIONS.setValue(CommonPropertyKey.GAME_VERSIONS.getValue());
-        }
-    }
-
     @Override
     public Optional<BatchRunnable> createUploadRunnable(FileBundle fileBundle) {
-        if (PropertyKeyUtil.isAbsentAndAnnounce(logger, HangarPropertyKey.KEY, HangarPropertyKey.PROJECT, HangarPropertyKey.PLATFORM, HangarPropertyKey.GAME_VERSIONS)) {
+        if (PropertyKeyUtil.isAbsentAndAnnounce(logger, HangarPropertyKey.KEY, HangarPropertyKey.PROJECT, HangarPropertyKey.PLATFORM, CommonPropertyKey.GAME_VERSIONS)) {
             return Optional.empty();
         }
 
@@ -83,6 +79,29 @@ public class HangarPlatform implements Platform {
 
         TaskPool preparePool = batchRunnable.getTaskPool(0);
         preparePool.addLast(process -> {
+            List<String> gameVersionFilters = Arrays.asList(StringUtil.splitSpace(CommonPropertyKey.GAME_VERSIONS.getValue()));
+            VersionTypeFilter gameVersionTypeFilter = VersionTypeFilter.RELEASE;
+            if (CommonPropertyKey.GAME_VERSION_TYPE.isPresent()) {
+                try {
+                    gameVersionTypeFilter = VersionTypeFilter.valueOf(CommonPropertyKey.GAME_VERSION_TYPE.getValue().toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    logger.error("Invalid version type: " + CommonPropertyKey.GAME_VERSION_TYPE.getValue(), e);
+                    process.complete();
+                    return;
+                }
+            }
+            MinecraftVersionFetcher.fetchVersionIds(gameVersionFilters, gameVersionTypeFilter).whenComplete((versionIds, throwable) -> {
+                if (throwable != null) {
+                    logger.error("Failed to fetch version ids", throwable);
+                    process.complete();
+                    return;
+                }
+                process.getData().put("versionIds", versionIds);
+                logger.info("The version ids are ready");
+                process.next();
+            });
+        });
+        preparePool.addLast(process -> {
             String channel = HangarPropertyKey.CHANNEL.getValue("Release");
 
             StringBuilder descriptionBuilder = new StringBuilder();
@@ -106,9 +125,10 @@ public class HangarPlatform implements Platform {
                 return;
             }
 
-            String[] gameVersionValue = StringUtil.splitCommaOrSpace(HangarPropertyKey.GAME_VERSIONS.getValue());
+            //noinspection unchecked
+            List<String> gameVersionValue = (List<String>) process.getData().get("versionIds");
 
-            Map<VersionUpload.Platform, List<String>> platformDependencies = Map.of(hangarPlatform, List.of(gameVersionValue));
+            Map<VersionUpload.Platform, List<String>> platformDependencies = Map.of(hangarPlatform, gameVersionValue);
 
             List<VersionUpload.PluginDependency> pluginDependencies;
             if (HangarPropertyKey.DEPENDENCIES.isPresent()) {

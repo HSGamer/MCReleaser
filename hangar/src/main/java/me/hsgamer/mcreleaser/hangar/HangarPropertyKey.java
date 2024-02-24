@@ -9,6 +9,5 @@ public interface HangarPropertyKey {
     PropertyKey PROJECT = HANGAR.key("project");
     PropertyKey CHANNEL = HANGAR.key("channel");
     PropertyKey PLATFORM = HANGAR.key("platform");
-    PropertyKey GAME_VERSIONS = HANGAR.key("gameVersions");
     PropertyKey DEPENDENCIES = HANGAR.key("dependencies");
 }

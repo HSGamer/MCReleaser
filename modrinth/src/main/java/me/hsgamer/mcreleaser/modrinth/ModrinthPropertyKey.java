@@ -12,5 +12,4 @@ public interface ModrinthPropertyKey {
     PropertyKey UNFEATURE = MODRINTH.key("unfeature");
     PropertyKey LOADERS = MODRINTH.key("loaders");
     PropertyKey DEPENDENCIES = MODRINTH.key("dependencies");
-    PropertyKey GAME_VERSIONS = MODRINTH.key("gameVersions");
 }

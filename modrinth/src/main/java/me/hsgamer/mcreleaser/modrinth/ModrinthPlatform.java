@@ -15,6 +15,8 @@ import me.hsgamer.mcreleaser.core.platform.Platform;
 import me.hsgamer.mcreleaser.core.property.CommonPropertyKey;
 import me.hsgamer.mcreleaser.core.util.PropertyKeyUtil;
 import me.hsgamer.mcreleaser.core.util.StringUtil;
+import me.hsgamer.mcreleaser.version.MinecraftVersionFetcher;
+import me.hsgamer.mcreleaser.version.VersionTypeFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,15 +28,9 @@ import java.util.Optional;
 public class ModrinthPlatform implements Platform {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public ModrinthPlatform() {
-        if (CommonPropertyKey.GAME_VERSIONS.isPresent() && ModrinthPropertyKey.GAME_VERSIONS.isAbsent()) {
-            ModrinthPropertyKey.GAME_VERSIONS.setValue(CommonPropertyKey.GAME_VERSIONS.getValue());
-        }
-    }
-
     @Override
     public Optional<BatchRunnable> createUploadRunnable(FileBundle fileBundle) {
-        if (PropertyKeyUtil.isAbsentAndAnnounce(logger, ModrinthPropertyKey.TOKEN, ModrinthPropertyKey.PROJECT, ModrinthPropertyKey.LOADERS, ModrinthPropertyKey.GAME_VERSIONS)) {
+        if (PropertyKeyUtil.isAbsentAndAnnounce(logger, ModrinthPropertyKey.TOKEN, ModrinthPropertyKey.PROJECT, ModrinthPropertyKey.LOADERS, CommonPropertyKey.GAME_VERSIONS)) {
             return Optional.empty();
         }
 
@@ -54,6 +50,29 @@ public class ModrinthPlatform implements Platform {
         });
 
         TaskPool requestPool = batchRunnable.getTaskPool(1);
+        requestPool.addLast(process -> {
+            List<String> gameVersionFilters = Arrays.asList(StringUtil.splitSpace(CommonPropertyKey.GAME_VERSIONS.getValue()));
+            VersionTypeFilter gameVersionTypeFilter = VersionTypeFilter.RELEASE;
+            if (CommonPropertyKey.GAME_VERSION_TYPE.isPresent()) {
+                try {
+                    gameVersionTypeFilter = VersionTypeFilter.valueOf(CommonPropertyKey.GAME_VERSION_TYPE.getValue().toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    logger.error("Invalid version type: " + CommonPropertyKey.GAME_VERSION_TYPE.getValue(), e);
+                    process.complete();
+                    return;
+                }
+            }
+            MinecraftVersionFetcher.fetchVersionIds(gameVersionFilters, gameVersionTypeFilter).whenComplete((versionIds, throwable) -> {
+                if (throwable != null) {
+                    logger.error("Failed to fetch version ids", throwable);
+                    process.complete();
+                    return;
+                }
+                process.getData().put("versionIds", versionIds);
+                logger.info("The version ids are ready");
+                process.next();
+            });
+        });
         requestPool.addLast(process -> {
             CreateVersion.CreateVersionRequest.CreateVersionRequestBuilder builder = CreateVersion.CreateVersionRequest.builder();
 
@@ -96,7 +115,8 @@ public class ModrinthPlatform implements Platform {
             List<String> loaders = Arrays.asList(StringUtil.splitSpace(ModrinthPropertyKey.LOADERS.getValue()));
             builder.loaders(loaders);
 
-            List<String> gameVersions = Arrays.asList(StringUtil.splitSpace(ModrinthPropertyKey.GAME_VERSIONS.getValue()));
+            //noinspection unchecked
+            List<String> gameVersions = (List<String>) process.getData().get("versionIds");
             builder.gameVersions(gameVersions);
 
             builder.files(fileBundle.allFiles());
