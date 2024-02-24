@@ -9,7 +9,7 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>mc-releaser-html</artifactId>
+    <artifactId>mc-releaser-renderer</artifactId>
 
     <dependencies>
         <dependency>

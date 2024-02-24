@@ -20,7 +20,7 @@
         <module>polymart</module>
 
         <!-- Helper modules -->
-        <module>html</module>
+        <module>renderer</module>
         <module>version</module>
     </modules>
 

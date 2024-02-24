@@ -19,7 +19,7 @@
         </dependency>
         <dependency>
             <groupId>me.hsgamer</groupId>
-            <artifactId>mc-releaser-html</artifactId>
+            <artifactId>mc-releaser-renderer</artifactId>
             <version>${project.version}</version>
         </dependency>
 
