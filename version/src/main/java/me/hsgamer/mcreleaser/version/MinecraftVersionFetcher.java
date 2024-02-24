@@ -109,4 +109,14 @@ public class MinecraftVersionFetcher {
     public static CompletableFuture<List<VersionManifest.Version>> fetchVersions(List<String> versionFilters, VersionTypeFilter versionTypeFilter) {
         return fetchVersionManifest().thenApply(versionManifest -> filterVersions(versionManifest, versionFilters, versionTypeFilter));
     }
+
+    public static CompletableFuture<List<String>> fetchVersionIds(List<String> versionFilters, VersionTypeFilter versionTypeFilter) {
+        return fetchVersions(versionFilters, versionTypeFilter).thenApply(versions -> {
+            List<String> versionIds = new ArrayList<>();
+            for (VersionManifest.Version version : versions) {
+                versionIds.add(version.id());
+            }
+            return versionIds;
+        });
+    }
 }
