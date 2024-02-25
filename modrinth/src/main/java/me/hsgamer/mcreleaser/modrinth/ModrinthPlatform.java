@@ -28,9 +28,18 @@ import java.util.Optional;
 public class ModrinthPlatform implements Platform {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
+    public ModrinthPlatform() {
+        if (ModrinthPropertyKey.GAME_VERSIONS.isAbsent() && CommonPropertyKey.GAME_VERSIONS.isPresent()) {
+            ModrinthPropertyKey.GAME_VERSIONS.setValue(CommonPropertyKey.GAME_VERSIONS.getValue());
+        }
+        if (ModrinthPropertyKey.GAME_VERSION_TYPE.isAbsent() && CommonPropertyKey.GAME_VERSION_TYPE.isPresent()) {
+            ModrinthPropertyKey.GAME_VERSION_TYPE.setValue(CommonPropertyKey.GAME_VERSION_TYPE.getValue());
+        }
+    }
+
     @Override
     public Optional<BatchRunnable> createUploadRunnable(FileBundle fileBundle) {
-        if (PropertyKeyUtil.isAbsentAndAnnounce(logger, ModrinthPropertyKey.TOKEN, ModrinthPropertyKey.PROJECT, ModrinthPropertyKey.LOADERS, CommonPropertyKey.GAME_VERSIONS)) {
+        if (PropertyKeyUtil.isAbsentAndAnnounce(logger, ModrinthPropertyKey.TOKEN, ModrinthPropertyKey.PROJECT, ModrinthPropertyKey.LOADERS, ModrinthPropertyKey.GAME_VERSIONS)) {
             return Optional.empty();
         }
 
@@ -51,13 +60,13 @@ public class ModrinthPlatform implements Platform {
 
         TaskPool requestPool = batchRunnable.getTaskPool(1);
         requestPool.addLast(process -> {
-            List<String> gameVersionFilters = Arrays.asList(StringUtil.splitSpace(CommonPropertyKey.GAME_VERSIONS.getValue()));
+            List<String> gameVersionFilters = Arrays.asList(StringUtil.splitSpace(ModrinthPropertyKey.GAME_VERSIONS.getValue()));
             VersionTypeFilter gameVersionTypeFilter = VersionTypeFilter.RELEASE;
-            if (CommonPropertyKey.GAME_VERSION_TYPE.isPresent()) {
+            if (ModrinthPropertyKey.GAME_VERSION_TYPE.isPresent()) {
                 try {
-                    gameVersionTypeFilter = VersionTypeFilter.valueOf(CommonPropertyKey.GAME_VERSION_TYPE.getValue().toUpperCase());
+                    gameVersionTypeFilter = VersionTypeFilter.valueOf(ModrinthPropertyKey.GAME_VERSION_TYPE.getValue().toUpperCase());
                 } catch (IllegalArgumentException e) {
-                    logger.error("Invalid version type: " + CommonPropertyKey.GAME_VERSION_TYPE.getValue(), e);
+                    logger.error("Invalid version type: " + ModrinthPropertyKey.GAME_VERSION_TYPE.getValue(), e);
                     process.complete();
                     return;
                 }

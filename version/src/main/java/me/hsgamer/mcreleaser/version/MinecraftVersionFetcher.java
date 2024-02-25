@@ -9,6 +9,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -56,28 +57,35 @@ public class MinecraftVersionFetcher {
         };
     }
 
+    private static Optional<VersionRange> parseVersionRange(String versionFilter, VersionTypeFilter versionTypeFilter) {
+        String[] split;
+        if (versionFilter.contains("..")) {
+            split = versionFilter.split("\\.\\.");
+        } else if (versionTypeFilter == VersionTypeFilter.RELEASE && versionFilter.contains("-")) {
+            split = versionFilter.split("-");
+        } else {
+            return Optional.empty();
+        }
+        return Optional.of(new VersionRange(split[0], split[1]));
+    }
+
     private static List<VersionManifest.Version> filterVersions(VersionManifest versionManifest, List<String> versionFilters, VersionTypeFilter versionTypeFilter) {
         List<VersionManifest.Version> versions = new ArrayList<>();
         List<VersionManifest.Version> fetchedVersions = versionManifest.versions();
         for (String versionFilter : versionFilters) {
-            String[] split = versionFilter.split("\\.\\.");
-            if (split.length == 2) {
-                String start = split[0];
-                String end = split[1];
-
-                if (end.equalsIgnoreCase("latest")) {
-                    end = getLatestVersionId(versionManifest, versionTypeFilter);
-                }
+            Optional<VersionRange> optionalVersionRange = parseVersionRange(versionFilter, versionTypeFilter);
+            if (optionalVersionRange.isPresent()) {
+                VersionRange versionRange = optionalVersionRange.get();
 
                 int startIndex = -1;
                 int endIndex = -1;
 
                 for (int i = 0; i < fetchedVersions.size(); i++) {
                     VersionManifest.Version fetchedVersion = fetchedVersions.get(i);
-                    if (fetchedVersion.id().equalsIgnoreCase(start)) {
+                    if (fetchedVersion.id().equalsIgnoreCase(versionRange.start)) {
                         startIndex = i;
                     }
-                    if (fetchedVersion.id().equalsIgnoreCase(end)) {
+                    if (fetchedVersion.id().equalsIgnoreCase(versionRange.end)) {
                         endIndex = i;
                     }
                 }
@@ -118,5 +126,22 @@ public class MinecraftVersionFetcher {
             }
             return versionIds;
         });
+    }
+
+    public static CompletableFuture<List<String>> normalizeVersions(List<String> versions, VersionTypeFilter versionTypeFilter) {
+        return fetchVersionManifest().thenApply(versionManifest -> {
+            List<String> normalizedVersions = new ArrayList<>();
+            for (String version : versions) {
+                String replacedVersion = version.replace("latest", getLatestVersionId(versionManifest, versionTypeFilter));
+                if (versionTypeFilter == VersionTypeFilter.RELEASE) {
+                    replacedVersion = replacedVersion.replace("..", "-");
+                }
+                normalizedVersions.add(replacedVersion);
+            }
+            return normalizedVersions;
+        });
+    }
+
+    private record VersionRange(String start, String end) {
     }
 }

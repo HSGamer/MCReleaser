@@ -12,6 +12,7 @@ import me.hsgamer.mcreleaser.core.util.StringUtil;
 import me.hsgamer.mcreleaser.hangar.model.ApiSession;
 import me.hsgamer.mcreleaser.hangar.model.VersionUpload;
 import me.hsgamer.mcreleaser.version.MinecraftVersionFetcher;
+import me.hsgamer.mcreleaser.version.VersionTypeFilter;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
@@ -29,9 +30,15 @@ public class HangarPlatform implements Platform {
     private final String baseUrl = "https://hangar.papermc.io/api/v1";
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
+    public HangarPlatform() {
+        if (HangarPropertyKey.GAME_VERSIONS.isAbsent() && CommonPropertyKey.GAME_VERSIONS.isPresent()) {
+            HangarPropertyKey.GAME_VERSIONS.setValue(CommonPropertyKey.GAME_VERSIONS.getValue());
+        }
+    }
+
     @Override
     public Optional<BatchRunnable> createUploadRunnable(FileBundle fileBundle) {
-        if (PropertyKeyUtil.isAbsentAndAnnounce(logger, HangarPropertyKey.KEY, HangarPropertyKey.PROJECT, HangarPropertyKey.PLATFORM, CommonPropertyKey.GAME_VERSIONS)) {
+        if (PropertyKeyUtil.isAbsentAndAnnounce(logger, HangarPropertyKey.KEY, HangarPropertyKey.PROJECT, HangarPropertyKey.PLATFORM, HangarPropertyKey.GAME_VERSIONS)) {
             return Optional.empty();
         }
 
@@ -78,22 +85,16 @@ public class HangarPlatform implements Platform {
 
         TaskPool preparePool = batchRunnable.getTaskPool(0);
         preparePool.addLast(process -> {
-            MinecraftVersionFetcher.fetchVersionManifest().whenComplete((versionManifest, throwable) -> {
+            List<String> gameVersions = Arrays.asList(StringUtil.splitSpace(CommonPropertyKey.GAME_VERSIONS.getValue()));
+            MinecraftVersionFetcher.normalizeVersions(gameVersions, VersionTypeFilter.RELEASE).whenComplete((versions, throwable) -> {
                 if (throwable != null) {
-                    logger.error("Failed to fetch version manifest", throwable);
+                    logger.error("Failed to fetch version", throwable);
                     process.complete();
                     return;
                 }
 
-                List<String> gameVersions = Arrays.asList(StringUtil.splitSpace(CommonPropertyKey.GAME_VERSIONS.getValue()));
-                String latestVersion = versionManifest.latest().release();
-                List<String> finalGameVersions = gameVersions.stream()
-                        .map(version -> version
-                                .replace("latest", latestVersion)
-                                .replace("..", "-")
-                        )
-                        .toList();
-                process.getData().put("versionIds", finalGameVersions);
+                process.getData().put("versions", versions);
+                logger.info("Prepared versions");
                 process.next();
             });
 
@@ -123,7 +124,7 @@ public class HangarPlatform implements Platform {
             }
 
             //noinspection unchecked
-            List<String> gameVersionValue = (List<String>) process.getData().get("versionIds");
+            List<String> gameVersionValue = (List<String>) process.getData().get("versions");
 
             Map<VersionUpload.Platform, List<String>> platformDependencies = Map.of(hangarPlatform, gameVersionValue);
 

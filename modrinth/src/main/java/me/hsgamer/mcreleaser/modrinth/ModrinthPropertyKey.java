@@ -8,6 +8,8 @@ public interface ModrinthPropertyKey {
     PropertyKey TOKEN = MODRINTH.key("token");
     PropertyKey PROJECT = MODRINTH.key("project");
     PropertyKey VERSION_TYPE = MODRINTH.key("versionType");
+    PropertyKey GAME_VERSIONS = MODRINTH.key("gameVersions");
+    PropertyKey GAME_VERSION_TYPE = MODRINTH.key("gameVersionType");
     PropertyKey FEATURED = MODRINTH.key("featured");
     PropertyKey UNFEATURE = MODRINTH.key("unfeature");
     PropertyKey LOADERS = MODRINTH.key("loaders");
