@@ -20,6 +20,7 @@ public class PathUtil {
         try (Stream<Path> pathStream = Files.walk(currentPath)) {
             pathStream
                     .filter(Files::isRegularFile)
+                    .sorted()
                     .forEach(path -> {
                         File file = path.toFile();
                         Path relativePath = currentPath.relativize(path);
