@@ -73,8 +73,8 @@ public class PolymartPlatform implements Platform {
 
         TaskPool uploadPool = batchRunnable.getTaskPool(2);
         uploadPool.addLast(process -> {
-            HttpClient client = (HttpClient) process.getData().get("client");
-            HttpEntity entity = (HttpEntity) process.getData().get("entity");
+            HttpClient client = process.getData().get("client");
+            HttpEntity entity = process.getData().get("entity");
 
             HttpPost request = new HttpPost("https://api.polymart.org/v1/postUpdate");
             request.setEntity(entity);
@@ -98,7 +98,7 @@ public class PolymartPlatform implements Platform {
             }
         });
         uploadPool.addLast(process -> {
-            CloseableHttpClient client = (CloseableHttpClient) process.getData().get("client");
+            CloseableHttpClient client = process.getData().get("client");
             try {
                 client.close();
                 logger.info("Closed client");

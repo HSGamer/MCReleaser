@@ -53,7 +53,7 @@ public class HangarPlatform implements Platform {
             process.next();
         });
         connectPool.addLast(process -> {
-            HttpClient client = (HttpClient) process.getData().get("client");
+            HttpClient client = process.getData().get("client");
             String key = HangarPropertyKey.KEY.getValue();
 
             HttpPost tokenRequest = new HttpPost(baseUrl + "/authenticate?apiKey=" + key);
@@ -123,8 +123,7 @@ public class HangarPlatform implements Platform {
                 return;
             }
 
-            //noinspection unchecked
-            List<String> gameVersionValue = (List<String>) process.getData().get("versions");
+            List<String> gameVersionValue = process.getData().get("versions");
 
             Map<VersionUpload.Platform, List<String>> platformDependencies = Map.of(hangarPlatform, gameVersionValue);
 
@@ -161,10 +160,10 @@ public class HangarPlatform implements Platform {
 
         TaskPool uploadPool = batchRunnable.getTaskPool(0);
         uploadPool.addLast(process -> {
-            HttpClient client = (HttpClient) process.getData().get("client");
+            HttpClient client = process.getData().get("client");
 
-            String token = (String) process.getData().get("token");
-            VersionUpload versionUpload = (VersionUpload) process.getData().get("versionUpload");
+            String token = process.getData().get("token");
+            VersionUpload versionUpload = process.getData().get("versionUpload");
             String project = HangarPropertyKey.PROJECT.getValue();
 
             MultipartEntityBuilder builder = MultipartEntityBuilder.create()
@@ -194,7 +193,7 @@ public class HangarPlatform implements Platform {
             }
         });
         uploadPool.addLast(process -> {
-            CloseableHttpClient client = (CloseableHttpClient) process.getData().get("client");
+            CloseableHttpClient client = process.getData().get("client");
             try {
                 client.close();
                 logger.info("Closed client");

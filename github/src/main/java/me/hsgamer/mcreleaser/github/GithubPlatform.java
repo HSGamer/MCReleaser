@@ -57,7 +57,7 @@ public class GithubPlatform implements Platform {
         });
         preparePool.addLast(process -> {
             try {
-                GHRepository repository = ((GitHub) process.getData().get("github")).getRepository(GithubPropertyKey.REPOSITORY.getValue());
+                GHRepository repository = process.getData().<GitHub>get("github").getRepository(GithubPropertyKey.REPOSITORY.getValue());
                 process.getData().put("repository", repository);
                 logger.info("Repository instance created");
                 process.next();
@@ -70,7 +70,7 @@ public class GithubPlatform implements Platform {
         TaskPool releasePool = runnable.getTaskPool(1);
         releasePool.addLast(process -> {
             try {
-                GHRepository repository = (GHRepository) process.getData().get("repository");
+                GHRepository repository = process.getData().get("repository");
                 GHRelease release = repository.getReleaseByTagName(GithubPropertyKey.REF.getValue());
                 if (release == null) {
                     release = repository.createRelease(GithubPropertyKey.REF.getValue())
@@ -94,7 +94,7 @@ public class GithubPlatform implements Platform {
         TaskPool uploadPool = runnable.getTaskPool(2);
         uploadPool.addLast(process -> {
             try {
-                GHRelease release = (GHRelease) process.getData().get("release");
+                GHRelease release = process.getData().get("release");
                 for (File file : fileBundle.allFiles()) {
                     release.uploadAsset(file, "application/octet-stream");
                     logger.info("File uploaded: " + file.getName());

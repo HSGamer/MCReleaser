@@ -124,8 +124,7 @@ public class ModrinthPlatform implements Platform {
             List<String> loaders = Arrays.asList(StringUtil.splitSpace(ModrinthPropertyKey.LOADERS.getValue()));
             builder.loaders(loaders);
 
-            //noinspection unchecked
-            List<String> gameVersions = (List<String>) process.getData().get("versionIds");
+            List<String> gameVersions = process.getData().get("versionIds");
             builder.gameVersions(gameVersions);
 
             builder.files(fileBundle.allFiles());
@@ -139,7 +138,7 @@ public class ModrinthPlatform implements Platform {
         if (ModrinthPropertyKey.UNFEATURE.asBoolean(true)) {
             TaskPool unfeaturePool = batchRunnable.getTaskPool(2);
             unfeaturePool.addLast(process -> {
-                ModrinthAPI api = (ModrinthAPI) process.getData().get("api");
+                ModrinthAPI api = process.getData().get("api");
                 String projectId = ModrinthPropertyKey.PROJECT.getValue();
 
                 api.versions()
@@ -169,8 +168,8 @@ public class ModrinthPlatform implements Platform {
 
         TaskPool uploadPool = batchRunnable.getTaskPool(3);
         uploadPool.addLast(process -> {
-            ModrinthAPI api = (ModrinthAPI) process.getData().get("api");
-            CreateVersion.CreateVersionRequest request = (CreateVersion.CreateVersionRequest) process.getData().get("request");
+            ModrinthAPI api = process.getData().get("api");
+            CreateVersion.CreateVersionRequest request = process.getData().get("request");
             api.versions().createProjectVersion(request).whenComplete((projectVersion, throwable) -> {
                 if (throwable != null) {
                     logger.info("Failed to upload the version", throwable);
