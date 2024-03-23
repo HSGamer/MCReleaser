@@ -57,7 +57,11 @@ public class MinecraftVersionFetcher {
         };
     }
 
-    private static Optional<VersionRange> parseVersionRange(String versionFilter, VersionTypeFilter versionTypeFilter) {
+    private static String normalizeVersion(String version, VersionManifest versionManifest, VersionTypeFilter versionTypeFilter) {
+        return version.equalsIgnoreCase("latest") ? getLatestVersionId(versionManifest, versionTypeFilter) : version;
+    }
+
+    private static Optional<VersionRange> parseVersionRange(String versionFilter, VersionManifest versionManifest, VersionTypeFilter versionTypeFilter) {
         String[] split;
         if (versionFilter.contains("..")) {
             split = versionFilter.split("\\.\\.");
@@ -66,14 +70,16 @@ public class MinecraftVersionFetcher {
         } else {
             return Optional.empty();
         }
-        return Optional.of(new VersionRange(split[0], split[1]));
+        String start = normalizeVersion(split[0], versionManifest, versionTypeFilter);
+        String end = normalizeVersion(split[1], versionManifest, versionTypeFilter);
+        return Optional.of(new VersionRange(start, end));
     }
 
     private static List<VersionManifest.Version> filterVersions(VersionManifest versionManifest, List<String> versionFilters, VersionTypeFilter versionTypeFilter) {
         List<VersionManifest.Version> versions = new ArrayList<>();
         List<VersionManifest.Version> fetchedVersions = versionManifest.versions();
         for (String versionFilter : versionFilters) {
-            Optional<VersionRange> optionalVersionRange = parseVersionRange(versionFilter, versionTypeFilter);
+            Optional<VersionRange> optionalVersionRange = parseVersionRange(versionFilter, versionManifest, versionTypeFilter);
             if (optionalVersionRange.isPresent()) {
                 VersionRange versionRange = optionalVersionRange.get();
 
