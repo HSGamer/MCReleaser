@@ -33,7 +33,7 @@
         <dependency>
             <groupId>com.github.masecla22</groupId>
             <artifactId>Modrinth4J</artifactId>
-            <version>7598da2dab</version>
+            <version>-7598da2dab-1</version>
         </dependency>
     </dependencies>
 </project>
