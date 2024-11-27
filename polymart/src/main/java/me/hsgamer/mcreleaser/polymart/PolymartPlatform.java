@@ -6,7 +6,7 @@ import me.hsgamer.mcreleaser.core.file.FileBundle;
 import me.hsgamer.mcreleaser.core.platform.Platform;
 import me.hsgamer.mcreleaser.core.property.CommonPropertyKey;
 import me.hsgamer.mcreleaser.core.util.PropertyKeyUtil;
-import me.hsgamer.mcreleaser.renderer.text.MarkdownToTextConverter;
+import me.hsgamer.mcreleaser.renderer.bbcode.MarkdownToBBCodeConverter;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
@@ -48,7 +48,7 @@ public class PolymartPlatform implements Platform {
 
             try {
                 String description = CommonPropertyKey.DESCRIPTION.getValue();
-                String textDescription = MarkdownToTextConverter.convert(description); // TODO: Convert to BBCode or ask Polymart to support Markdown or HTML
+                String textDescription = MarkdownToBBCodeConverter.convert(description);
                 builder.addTextBody("message", textDescription);
             } catch (Exception e) {
                 logger.error("Failed to convert description", e);
