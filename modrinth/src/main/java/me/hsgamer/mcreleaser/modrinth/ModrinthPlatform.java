@@ -139,8 +139,8 @@ public class ModrinthPlatform implements Platform {
             unfeaturePool.addLast(process -> {
                 ModrinthAPI api = process.getData().get("api");
                 String projectId = ModrinthPropertyKey.PROJECT.getValue();
-                List<String> loaders = process.getData().get("loaders");
-                Set<String> loaderSet = loaders.stream().map(String::toLowerCase).collect(Collectors.toSet());
+                Set<String> loaderSet = process.getData().<List<String>>get("loaders").stream().map(String::toLowerCase).collect(Collectors.toSet());
+                Set<String> gameVersionSet = process.getData().<List<String>>get("versionIds").stream().map(String::toLowerCase).collect(Collectors.toSet());
 
                 api.versions()
                         .getProjectVersions(projectId, GetProjectVersions.GetProjectVersionsRequest.builder().featured(true).build())
@@ -154,6 +154,9 @@ public class ModrinthPlatform implements Platform {
                             TaskPool taskPool = process.getCurrentTaskPool();
                             for (ProjectVersion projectVersion : projectVersions) {
                                 if (projectVersion.getLoaders().stream().map(String::toLowerCase).noneMatch(loaderSet::contains)) {
+                                    continue;
+                                }
+                                if (projectVersion.getGameVersions().stream().map(String::toLowerCase).noneMatch(gameVersionSet::contains)) {
                                     continue;
                                 }
                                 taskPool.addLast(process1 -> api.versions().modifyProjectVersion(projectVersion.getId(), ModifyVersion.ModifyVersionRequest.builder().featured(false).build())
