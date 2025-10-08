@@ -20,10 +20,8 @@ import me.hsgamer.mcreleaser.version.VersionTypeFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class ModrinthPlatform implements Platform {
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -123,6 +121,7 @@ public class ModrinthPlatform implements Platform {
 
             List<String> loaders = Arrays.asList(StringUtil.splitSpace(ModrinthPropertyKey.LOADERS.getValue()));
             builder.loaders(loaders);
+            process.getData().put("loaders", loaders);
 
             List<String> gameVersions = process.getData().get("versionIds");
             builder.gameVersions(gameVersions);
@@ -140,6 +139,8 @@ public class ModrinthPlatform implements Platform {
             unfeaturePool.addLast(process -> {
                 ModrinthAPI api = process.getData().get("api");
                 String projectId = ModrinthPropertyKey.PROJECT.getValue();
+                List<String> loaders = process.getData().get("loaders");
+                Set<String> loaderSet = loaders.stream().map(String::toLowerCase).collect(Collectors.toSet());
 
                 api.versions()
                         .getProjectVersions(projectId, GetProjectVersions.GetProjectVersionsRequest.builder().featured(true).build())
@@ -151,15 +152,20 @@ public class ModrinthPlatform implements Platform {
                             }
 
                             TaskPool taskPool = process.getCurrentTaskPool();
-                            projectVersions.forEach(projectVersion -> taskPool.addLast(process1 -> api.versions().modifyProjectVersion(projectVersion.getId(), ModifyVersion.ModifyVersionRequest.builder().featured(false).build())
-                                    .whenComplete((aVoid, throwable1) -> {
-                                        if (throwable1 != null) {
-                                            logger.error("Failed to un-feature version: " + projectVersion.getId(), throwable1);
-                                        } else {
-                                            logger.info("Un-featured version: " + projectVersion.getId());
-                                        }
-                                        process1.next();
-                                    })));
+                            for (ProjectVersion projectVersion : projectVersions) {
+                                if (projectVersion.getLoaders().stream().map(String::toLowerCase).noneMatch(loaderSet::contains)) {
+                                    continue;
+                                }
+                                taskPool.addLast(process1 -> api.versions().modifyProjectVersion(projectVersion.getId(), ModifyVersion.ModifyVersionRequest.builder().featured(false).build())
+                                        .whenComplete((aVoid, throwable1) -> {
+                                            if (throwable1 != null) {
+                                                logger.error("Failed to un-feature version: " + projectVersion.getId(), throwable1);
+                                            } else {
+                                                logger.info("Un-featured version: " + projectVersion.getId());
+                                            }
+                                            process1.next();
+                                        }));
+                            }
 
                             process.next();
                         });
