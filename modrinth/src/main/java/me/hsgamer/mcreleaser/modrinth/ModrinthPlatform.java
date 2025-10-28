@@ -2,12 +2,6 @@ package me.hsgamer.mcreleaser.modrinth;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import masecla.modrinth4j.client.agent.UserAgent;
-import masecla.modrinth4j.endpoints.version.CreateVersion;
-import masecla.modrinth4j.endpoints.version.GetProjectVersions;
-import masecla.modrinth4j.endpoints.version.ModifyVersion;
-import masecla.modrinth4j.main.ModrinthAPI;
-import masecla.modrinth4j.model.version.ProjectVersion;
 import me.hsgamer.hscore.task.BatchRunnable;
 import me.hsgamer.hscore.task.element.TaskPool;
 import me.hsgamer.mcreleaser.core.file.FileBundle;
@@ -15,12 +9,27 @@ import me.hsgamer.mcreleaser.core.platform.Platform;
 import me.hsgamer.mcreleaser.core.property.CommonPropertyKey;
 import me.hsgamer.mcreleaser.core.util.PropertyKeyUtil;
 import me.hsgamer.mcreleaser.core.util.StringUtil;
+import me.hsgamer.mcreleaser.modrinth.api.ApiClient;
+import me.hsgamer.mcreleaser.modrinth.api.ApiException;
+import me.hsgamer.mcreleaser.modrinth.api.Configuration;
+import me.hsgamer.mcreleaser.modrinth.api.client.VersionsApi;
+import me.hsgamer.mcreleaser.modrinth.api.model.CreatableVersionDto;
+import me.hsgamer.mcreleaser.modrinth.api.model.EditableVersionDto;
+import me.hsgamer.mcreleaser.modrinth.api.model.VersionDependencyDto;
+import me.hsgamer.mcreleaser.modrinth.api.model.VersionDto;
 import me.hsgamer.mcreleaser.version.MinecraftVersionFetcher;
 import me.hsgamer.mcreleaser.version.VersionTypeFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 import java.util.stream.Collectors;
 
 public class ModrinthPlatform implements Platform {
@@ -46,12 +55,16 @@ public class ModrinthPlatform implements Platform {
         BatchRunnable batchRunnable = new BatchRunnable();
         TaskPool preparePool = batchRunnable.getTaskPool(0);
         preparePool.addLast(process -> {
-            UserAgent userAgent = UserAgent.builder()
-                    .projectName(CommonPropertyKey.NAME.getValue())
-                    .projectVersion(CommonPropertyKey.VERSION.getValue())
-                    .build();
-            ModrinthAPI api = ModrinthAPI.rateLimited(userAgent, ModrinthPropertyKey.TOKEN.getValue());
-            process.getData().put("api", api);
+            Configuration.setApiClientFactory(() -> {
+                ApiClient apiClient = new ApiClient();
+                apiClient.setUserAgent(CommonPropertyKey.NAME.getValue() + "/" + CommonPropertyKey.VERSION.getValue());
+                apiClient.setApiKey(ModrinthPropertyKey.TOKEN.getValue());
+                if (ModrinthPropertyKey.ENDPOINT.getValue("production").equalsIgnoreCase("staging")) {
+                    logger.info("Use staging endpoints");
+                    apiClient.setServerIndex(1);
+                }
+                return apiClient;
+            });
             logger.info("Modrinth API is ready");
             process.next();
         });
@@ -81,22 +94,21 @@ public class ModrinthPlatform implements Platform {
             });
         });
         requestPool.addLast(process -> {
-            CreateVersion.CreateVersionRequest.CreateVersionRequestBuilder builder = CreateVersion.CreateVersionRequest.builder();
+            CreatableVersionDto dto = new CreatableVersionDto();
 
-            builder.projectId(ModrinthPropertyKey.PROJECT.getValue());
-            builder.featured(ModrinthPropertyKey.FEATURED.asBoolean(true));
+            dto.setProjectId(ModrinthPropertyKey.PROJECT.getValue());
+            dto.setFeatured(ModrinthPropertyKey.FEATURED.asBoolean(true));
 
-            builder.name(CommonPropertyKey.NAME.getValue());
-            builder.changelog(CommonPropertyKey.DESCRIPTION.getValue());
-            builder.versionNumber(CommonPropertyKey.VERSION.getValue());
+            dto.setName(CommonPropertyKey.NAME.getValue());
+            dto.setChangelog(CommonPropertyKey.DESCRIPTION.getValue());
+            dto.setVersionNumber(CommonPropertyKey.VERSION.getValue());
 
             if (ModrinthPropertyKey.VERSION_TYPE.isAbsent()) {
-                builder.versionType(ProjectVersion.VersionType.RELEASE);
+                dto.setVersionType(CreatableVersionDto.VersionTypeEnum.RELEASE);
             } else {
                 String versionTypeString = ModrinthPropertyKey.VERSION_TYPE.getValue();
                 try {
-                    ProjectVersion.VersionType versionType = ProjectVersion.VersionType.valueOf(versionTypeString.toUpperCase());
-                    builder.versionType(versionType);
+                    dto.setVersionType(CreatableVersionDto.VersionTypeEnum.valueOf(versionTypeString.toUpperCase()));
                 } catch (IllegalArgumentException e) {
                     logger.error("Invalid version type: " + versionTypeString, e);
                     process.complete();
@@ -105,31 +117,33 @@ public class ModrinthPlatform implements Platform {
             }
 
             if (ModrinthPropertyKey.DEPENDENCIES.isPresent()) {
-                TypeToken<List<ProjectVersion.ProjectDependency>> typeToken = new TypeToken<>() {
-                };
+                TypeToken<List<VersionDependencyDto>> typeToken = new TypeToken<>() {};
                 try {
-                    List<ProjectVersion.ProjectDependency> dependencies = gson.fromJson(ModrinthPropertyKey.DEPENDENCIES.getValue(), typeToken.getType());
-                    builder.dependencies(dependencies);
+                    List<VersionDependencyDto> dependencies = gson.fromJson(ModrinthPropertyKey.DEPENDENCIES.getValue(), typeToken.getType());
+                    dto.setDependencies(dependencies);
                 } catch (Exception e) {
                     logger.error("Invalid dependencies", e);
                     process.complete();
                     return;
                 }
             } else {
-                builder.dependencies(Collections.emptyList());
+                dto.setDependencies(Collections.emptyList());
             }
 
             List<String> loaders = Arrays.asList(StringUtil.splitSpace(ModrinthPropertyKey.LOADERS.getValue()));
-            builder.loaders(loaders);
+            dto.setLoaders(loaders);
             process.getData().put("loaders", loaders);
 
             List<String> gameVersions = process.getData().get("versionIds");
-            builder.gameVersions(gameVersions);
+            dto.setGameVersions(gameVersions);
 
-            builder.files(fileBundle.allFiles());
-            builder.primaryFile(fileBundle.primaryFile().getName());
+            List<String> fileParts = fileBundle.allFiles().stream().map(File::getName).collect(Collectors.toList());
+            dto.setFileParts(fileParts);
+            if (fileBundle.primaryFile() != null) {
+                dto.setPrimaryFile(fileBundle.primaryFile().getName());
+            }
 
-            process.getData().put("request", builder.build());
+            process.getData().put("request", dto);
             logger.info("The request is ready");
             process.next();
         });
@@ -137,56 +151,86 @@ public class ModrinthPlatform implements Platform {
         if (ModrinthPropertyKey.UNFEATURE.asBoolean(true)) {
             TaskPool unfeaturePool = batchRunnable.getTaskPool(2);
             unfeaturePool.addLast(process -> {
-                ModrinthAPI api = process.getData().get("api");
                 String projectId = ModrinthPropertyKey.PROJECT.getValue();
                 Set<String> loaderSet = process.getData().<List<String>>get("loaders").stream().map(String::toLowerCase).collect(Collectors.toSet());
                 Set<String> gameVersionSet = process.getData().<List<String>>get("versionIds").stream().map(String::toLowerCase).collect(Collectors.toSet());
 
-                api.versions()
-                        .getProjectVersions(projectId, GetProjectVersions.GetProjectVersionsRequest.builder().featured(true).build())
-                        .whenComplete((projectVersions, throwable) -> {
-                            if (throwable != null) {
-                                logger.error("Failed to get all featured versions", throwable);
-                                process.complete();
-                                return;
+                VersionsApi versionsApi = new VersionsApi();
+                try {
+                    List<VersionDto> projectVersions = versionsApi.getProjectVersions(projectId, null, null, true);
+                    TaskPool taskPool = process.getCurrentTaskPool();
+                    for (VersionDto projectVersion : projectVersions) {
+                        if (projectVersion.getLoaders().stream().map(String::toLowerCase).noneMatch(loaderSet::contains)) {
+                            continue;
+                        }
+                        if (projectVersion.getGameVersions().stream().map(String::toLowerCase).noneMatch(gameVersionSet::contains)) {
+                            continue;
+                        }
+                        taskPool.addLast(() -> {
+                            try {
+                                versionsApi.modifyVersion(projectVersion.getId(), new EditableVersionDto().featured(false));
+                                logger.info("Un-featured version: {}", projectVersion.getId());
+                            } catch (Exception e) {
+                                logger.error("Failed to un-feature version: {}", projectVersion.getId(), e);
                             }
-
-                            TaskPool taskPool = process.getCurrentTaskPool();
-                            for (ProjectVersion projectVersion : projectVersions) {
-                                if (projectVersion.getLoaders().stream().map(String::toLowerCase).noneMatch(loaderSet::contains)) {
-                                    continue;
-                                }
-                                if (projectVersion.getGameVersions().stream().map(String::toLowerCase).noneMatch(gameVersionSet::contains)) {
-                                    continue;
-                                }
-                                taskPool.addLast(process1 -> api.versions().modifyProjectVersion(projectVersion.getId(), ModifyVersion.ModifyVersionRequest.builder().featured(false).build())
-                                        .whenComplete((aVoid, throwable1) -> {
-                                            if (throwable1 != null) {
-                                                logger.error("Failed to un-feature version: " + projectVersion.getId(), throwable1);
-                                            } else {
-                                                logger.info("Un-featured version: " + projectVersion.getId());
-                                            }
-                                            process1.next();
-                                        }));
-                            }
-
-                            process.next();
                         });
+                    }
+                    process.next();
+                } catch (ApiException e) {
+                    logger.warn("Failed to retrieve versions for project: {}", projectId, e);
+                    process.complete();
+                }
             });
         }
 
         TaskPool uploadPool = batchRunnable.getTaskPool(3);
         uploadPool.addLast(process -> {
-            ModrinthAPI api = process.getData().get("api");
-            CreateVersion.CreateVersionRequest request = process.getData().get("request");
-            api.versions().createProjectVersion(request).whenComplete((projectVersion, throwable) -> {
-                if (throwable != null) {
-                    logger.info("Failed to upload the version", throwable);
-                } else {
-                    logger.info("Uploaded the version: " + projectVersion.getId());
+            VersionsApi versionsApi = new VersionsApi();
+            ApiClient apiClient = versionsApi.getApiClient();
+            CreatableVersionDto request = process.getData().get("request");
+
+            // Build multipart body
+            MultipartBody.Builder multipartBuilder = new MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("data", gson.toJson(request));
+
+            for (File file : fileBundle.allFiles()) {
+                try {
+                    RequestBody fileBody = RequestBody.create(file, MediaType.parse("application/octet-stream"));
+                    multipartBuilder.addFormDataPart(file.getName(), file.getName(), fileBody);
+                } catch (Exception e) {
+                    logger.error("Failed to add file to multipart: {}", file.getName(), e);
+                    process.complete();
+                    return;
                 }
+            }
+
+            RequestBody body = multipartBuilder.build();
+
+            // Build the request
+            String url = apiClient.getBasePath() + "/version";
+            Request.Builder requestBuilder = new Request.Builder()
+                    .url(url)
+                    .post(body)
+                    .addHeader("Authorization", ModrinthPropertyKey.TOKEN.getValue())
+                    .addHeader("User-Agent", CommonPropertyKey.NAME.getValue() + "/" + CommonPropertyKey.VERSION.getValue());
+
+            try (Response response = apiClient.getHttpClient().newCall(requestBuilder.build()).execute()) {
+                if (!response.isSuccessful()) {
+                    logger.warn("Failed to create the version: {}", response.message());
+                    process.complete();
+                    return;
+                }
+                String responseBody = response.body() != null ? response.body().string() : "{}";
+                VersionDto version = gson.fromJson(responseBody, VersionDto.class);
+                logger.info("Uploaded the version: {}", version.getId());
+            } catch (Exception e) {
+                logger.warn("Failed to upload the version", e);
                 process.complete();
-            });
+                return;
+            }
+
+            process.complete();
         });
 
         return Optional.of(batchRunnable);
