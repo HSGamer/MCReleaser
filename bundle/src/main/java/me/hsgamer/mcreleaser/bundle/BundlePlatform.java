@@ -67,8 +67,7 @@ public class BundlePlatform implements Platform {
 
         TaskPool executePool = batchRunnable.getTaskPool(1);
         executePool.addLast(process -> {
-            //noinspection unchecked
-            List<BatchRunnable> runnableList = (List<BatchRunnable>) process.getData().get("runnableList");
+            List<BatchRunnable> runnableList = process.getData().get("runnableList");
             if (runSync) {
                 TaskPool pool = process.getCurrentTaskPool();
                 runnableList.forEach(pool::addLast);
