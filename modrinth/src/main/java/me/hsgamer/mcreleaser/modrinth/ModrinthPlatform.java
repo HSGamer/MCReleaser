@@ -10,12 +10,10 @@ import me.hsgamer.mcreleaser.core.property.CommonPropertyKey;
 import me.hsgamer.mcreleaser.core.util.PropertyKeyUtil;
 import me.hsgamer.mcreleaser.core.util.StringUtil;
 import me.hsgamer.mcreleaser.modrinth.api.ApiClient;
-import me.hsgamer.mcreleaser.modrinth.api.ApiException;
 import me.hsgamer.mcreleaser.modrinth.api.ApiResponse;
 import me.hsgamer.mcreleaser.modrinth.api.Configuration;
 import me.hsgamer.mcreleaser.modrinth.api.client.VersionsApi;
 import me.hsgamer.mcreleaser.modrinth.api.model.CreatableVersionDto;
-import me.hsgamer.mcreleaser.modrinth.api.model.EditableVersionDto;
 import me.hsgamer.mcreleaser.modrinth.api.model.VersionDependencyDto;
 import me.hsgamer.mcreleaser.modrinth.api.model.VersionDto;
 import me.hsgamer.mcreleaser.version.MinecraftVersionFetcher;
@@ -145,41 +143,6 @@ public class ModrinthPlatform implements Platform {
             logger.info("The request is ready");
             process.next();
         });
-
-        if (ModrinthPropertyKey.UNFEATURE.asBoolean(true)) {
-            TaskPool unfeaturePool = batchRunnable.getTaskPool(2);
-            unfeaturePool.addLast(process -> {
-                String projectId = ModrinthPropertyKey.PROJECT.getValue();
-                Set<String> loaderSet = process.getData().<List<String>>get("loaders").stream().map(String::toLowerCase).collect(Collectors.toSet());
-                Set<String> gameVersionSet = process.getData().<List<String>>get("versionIds").stream().map(String::toLowerCase).collect(Collectors.toSet());
-
-                VersionsApi versionsApi = new VersionsApi();
-                try {
-                    List<VersionDto> projectVersions = versionsApi.getProjectVersions(projectId, null, null, true);
-                    TaskPool taskPool = process.getCurrentTaskPool();
-                    for (VersionDto projectVersion : projectVersions) {
-                        if (projectVersion.getLoaders().stream().map(String::toLowerCase).noneMatch(loaderSet::contains)) {
-                            continue;
-                        }
-                        if (projectVersion.getGameVersions().stream().map(String::toLowerCase).noneMatch(gameVersionSet::contains)) {
-                            continue;
-                        }
-                        taskPool.addLast(() -> {
-                            try {
-                                versionsApi.modifyVersion(projectVersion.getId(), new EditableVersionDto().featured(false));
-                                logger.info("Un-featured version: {}", projectVersion.getId());
-                            } catch (Exception e) {
-                                logger.error("Failed to un-feature version: {}", projectVersion.getId(), e);
-                            }
-                        });
-                    }
-                    process.next();
-                } catch (ApiException e) {
-                    logger.warn("Failed to retrieve versions for project: {}", projectId, e);
-                    process.complete();
-                }
-            });
-        }
 
         TaskPool uploadPool = batchRunnable.getTaskPool(3);
         uploadPool.addLast(process -> {
