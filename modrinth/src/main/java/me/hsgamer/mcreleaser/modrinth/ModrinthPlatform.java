@@ -11,6 +11,7 @@ import me.hsgamer.mcreleaser.core.util.PropertyKeyUtil;
 import me.hsgamer.mcreleaser.core.util.StringUtil;
 import me.hsgamer.mcreleaser.modrinth.api.ApiClient;
 import me.hsgamer.mcreleaser.modrinth.api.ApiException;
+import me.hsgamer.mcreleaser.modrinth.api.ApiResponse;
 import me.hsgamer.mcreleaser.modrinth.api.Configuration;
 import me.hsgamer.mcreleaser.modrinth.api.client.VersionsApi;
 import me.hsgamer.mcreleaser.modrinth.api.model.CreatableVersionDto;
@@ -19,17 +20,13 @@ import me.hsgamer.mcreleaser.modrinth.api.model.VersionDependencyDto;
 import me.hsgamer.mcreleaser.modrinth.api.model.VersionDto;
 import me.hsgamer.mcreleaser.version.MinecraftVersionFetcher;
 import me.hsgamer.mcreleaser.version.VersionTypeFilter;
+import okhttp3.Call;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.*;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 import java.util.stream.Collectors;
 
 public class ModrinthPlatform implements Platform {
@@ -117,7 +114,8 @@ public class ModrinthPlatform implements Platform {
             }
 
             if (ModrinthPropertyKey.DEPENDENCIES.isPresent()) {
-                TypeToken<List<VersionDependencyDto>> typeToken = new TypeToken<>() {};
+                TypeToken<List<VersionDependencyDto>> typeToken = new TypeToken<>() {
+                };
                 try {
                     List<VersionDependencyDto> dependencies = gson.fromJson(ModrinthPropertyKey.DEPENDENCIES.getValue(), typeToken.getType());
                     dto.setDependencies(dependencies);
@@ -189,45 +187,47 @@ public class ModrinthPlatform implements Platform {
             ApiClient apiClient = versionsApi.getApiClient();
             CreatableVersionDto request = process.getData().get("request");
 
-            // Build multipart body
-            MultipartBody.Builder multipartBuilder = new MultipartBody.Builder()
-                    .setType(MultipartBody.FORM)
-                    .addFormDataPart("data", gson.toJson(request));
-
-            for (File file : fileBundle.allFiles()) {
-                try {
-                    RequestBody fileBody = RequestBody.create(file, MediaType.parse("application/octet-stream"));
-                    multipartBuilder.addFormDataPart(file.getName(), file.getName(), fileBody);
-                } catch (Exception e) {
-                    logger.error("Failed to add file to multipart: {}", file.getName(), e);
-                    process.complete();
-                    return;
-                }
+            Map<String, String> headerParams = new HashMap<>();
+            final String[] accepts = {"application/json"};
+            final String accept = apiClient.selectHeaderAccept(accepts);
+            if (accept != null) {
+                headerParams.put("Accept", accept);
+            }
+            final String[] contentTypes = {"multipart/form-data"};
+            final String contentType = apiClient.selectHeaderContentType(contentTypes);
+            if (contentType != null) {
+                headerParams.put("Content-Type", contentType);
             }
 
-            RequestBody body = multipartBuilder.build();
+            Map<String, Object> formParams = new HashMap<>();
+            formParams.put("data", request);
+            for (File file : fileBundle.allFiles()) {
+                formParams.put(file.getName(), file);
+            }
 
-            // Build the request
-            String url = apiClient.getBasePath() + "/version";
-            Request.Builder requestBuilder = new Request.Builder()
-                    .url(url)
-                    .post(body)
-                    .addHeader("Authorization", ModrinthPropertyKey.TOKEN.getValue())
-                    .addHeader("User-Agent", CommonPropertyKey.NAME.getValue() + "/" + CommonPropertyKey.VERSION.getValue());
+            String[] authNames = new String[]{"TokenAuth"};
+            try {
+                Call call = apiClient.buildCall(
+                        null,
+                        "/version",
+                        "POST",
+                        Collections.emptyList(),
+                        Collections.emptyList(),
+                        null,
+                        headerParams,
+                        Collections.emptyMap(),
+                        formParams,
+                        authNames,
+                        null
+                );
 
-            try (Response response = apiClient.getHttpClient().newCall(requestBuilder.build()).execute()) {
-                if (!response.isSuccessful()) {
-                    logger.warn("Failed to create the version: {}", response.message());
-                    process.complete();
-                    return;
-                }
-                String responseBody = response.body() != null ? response.body().string() : "{}";
-                VersionDto version = gson.fromJson(responseBody, VersionDto.class);
-                logger.info("Uploaded the version: {}", version.getId());
+                Type responseType = new TypeToken<VersionDto>() {
+                }.getType();
+                ApiResponse<VersionDto> execute = apiClient.execute(call, responseType);
+                VersionDto response = execute.getData();
+                logger.info("Uploaded the version: {}", response.getId());
             } catch (Exception e) {
                 logger.warn("Failed to upload the version", e);
-                process.complete();
-                return;
             }
 
             process.complete();
