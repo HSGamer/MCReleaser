@@ -38,6 +38,7 @@
                 <version>7.16.0</version>
                 <executions>
                     <execution>
+                        <phase>generate-sources</phase>
                         <goals>
                             <goal>generate</goal>
                         </goals>
@@ -45,15 +46,29 @@
                             <inputSpec>https://docs.modrinth.com/openapi.yaml</inputSpec>
                             <generatorName>java</generatorName>
 
-                            <output>${project.build.directory}/generated-sources/openapi</output>
-
                             <packageName>me.hsgamer.mcreleaser.modrinth.api</packageName>
                             <apiPackage>me.hsgamer.mcreleaser.modrinth.api.client</apiPackage>
                             <modelPackage>me.hsgamer.mcreleaser.modrinth.api.model</modelPackage>
 
                             <apisToGenerate>Versions</apisToGenerate>
+                            <modelsToGenerate>
+                                CreatableVersion,
+                                VersionDependency,
+                                Version,
+                                EditableVersion,
+                                AuthError,
+                                InvalidInputError,
+                                Schedule,
+                                VersionFile,
+                                EditableFileType,
+                                VersionFileHashes
+                            </modelsToGenerate>
 
                             <generateModelDocumentation>false</generateModelDocumentation>
+
+                            <configOptions>
+                                <sourceFolder>src/gen/java/main</sourceFolder>
+                            </configOptions>
 
                             <modelNameSuffix>Dto</modelNameSuffix>
                             <generateApiTests>false</generateApiTests>
