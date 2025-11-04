@@ -1,14 +1,7 @@
 FROM maven:3-eclipse-temurin-17-alpine AS build
 WORKDIR /app
 COPY pom.xml .
-COPY cli/pom.xml cli/
-COPY core/pom.xml core/
-COPY github/pom.xml github/
-COPY hangar/pom.xml hangar/
-COPY modrinth/pom.xml modrinth/
-COPY polymart/pom.xml polymart/
-COPY renderer/pom.xml renderer/
-COPY version/pom.xml version/
+COPY */pom.xml */
 RUN mvn dependency:go-offline -B
 COPY . .
 RUN mvn clean package -DskipTests
