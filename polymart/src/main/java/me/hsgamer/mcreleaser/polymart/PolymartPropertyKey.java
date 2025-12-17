@@ -7,6 +7,4 @@ public interface PolymartPropertyKey {
     PropertyPrefix POLYMART = new PropertyPrefix("polymart");
     PropertyKey KEY = POLYMART.key("key");
     PropertyKey RESOURCE = POLYMART.key("resource");
-    PropertyKey BETA = POLYMART.key("beta");
-    PropertyKey SNAPSHOT = POLYMART.key("snapshot");
 }
