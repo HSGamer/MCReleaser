@@ -82,9 +82,8 @@ Check [action-mcreleaser](https://github.com/HSGamer/action-mcreleaser)
 
 ### [Polymart](https://polymart.org/)
 
-| Name                | Description                                   | Required | Default |
-|---------------------|-----------------------------------------------|----------|---------|
-| `POLYMART_KEY`      | The Polymart API key to publish the artifact  | Yes      |         |
-| `POLYMART_RESOURCE` | The Polymart resource to publish the artifact | Yes      |         |
-| `POLYMART_BETA`     | Whether to publish the artifact as a beta     | No       | `false` |
-| `POLYMART_SNAPSHOT` | Whether to publish the artifact as a snapshot | No       | `false` |
+| Name                | Description                                            | Required | Default   |
+|---------------------|--------------------------------------------------------|----------|-----------|
+| `POLYMART_KEY`      | The Polymart API key to publish the artifact           | Yes      |           |
+| `POLYMART_RESOURCE` | The Polymart resource to publish the artifact          | Yes      |           |
+| `POLYMART_TAG`      | The tag of the artifact. `release`, `beta`, `snapshot` | No       | `release` |

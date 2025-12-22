@@ -53,6 +53,7 @@ public class PolymartPlatform implements Platform {
             jsonBody.put("product", PolymartPropertyKey.RESOURCE.getValue());
             jsonBody.put("version", CommonPropertyKey.VERSION.getValue());
             jsonBody.put("file_name", fileBundle.primaryFile().getName());
+            jsonBody.put("tag", PolymartPropertyKey.TAG.getValue("release"));
 
             if (CommonPropertyKey.NAME.getValue() != null && !CommonPropertyKey.NAME.getValue().isEmpty()) {
                 jsonBody.put("update_title", CommonPropertyKey.NAME.getValue());
