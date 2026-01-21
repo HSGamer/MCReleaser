@@ -154,7 +154,7 @@ public class ModrinthPlatform implements Platform {
 
                 JsonObject versionDto = client.execute(post, response -> {
                     if (response.getCode() != 200) {
-                        throw new HttpException("Execute not successful", response.getCode(), EntityUtils.toString(response.getEntity()));
+                        throw new HttpException("Execute not successful. Got: %d %s", response.getCode(), EntityUtils.toString(response.getEntity()));
                     }
                     try {
                         String body = EntityUtils.toString(response.getEntity());
