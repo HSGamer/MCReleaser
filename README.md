@@ -87,3 +87,18 @@ Check [action-mcreleaser](https://github.com/HSGamer/action-mcreleaser)
 | `POLYMART_KEY`      | The Polymart API key to publish the artifact           | Yes      |           |
 | `POLYMART_RESOURCE` | The Polymart resource to publish the artifact          | Yes      |           |
 | `POLYMART_TAG`      | The tag of the artifact. `release`, `beta`, `snapshot` | No       | `release` |
+
+### [CurseForge](https://www.curseforge.com/)
+
+| Name                       | Description                                                                       | Required | Default     |
+|----------------------------|-----------------------------------------------------------------------------------|----------|-------------|
+| `CURSEFORGE_TOKEN`         | The CurseForge API token to publish the artifact                                  | Yes      |             |
+| `CURSEFORGE_PROJECT`       | The CurseForge project to publish the artifact                                    | Yes      |             |
+| `CURSEFORGE_TYPE`          | The type of the artifact. `minecraft` or `hytale`                                 | No       | `minecraft` |
+| `CURSEFORGE_RELEASE_TYPE`  | The release type of the artifact. `release`, `alpha` or `beta`                    | No       | `release`   |
+| `CURSEFORGE_GAME_VERSIONS` | The game versions that the artifact supports <br> Will use `GAME_VERSIONS` if set | No       |             |
+| `CURSEFORGE_RELATIONS`     | The relations of the artifact                                                     | No       |             |
+| `CURSEFORGE_MOD_LOADERS`   | The mod loaders that the artifact supports                                        | No       |             |
+| `CURSEFORGE_JAVA_VERSION`  | The Java version required for the artifact                                        | No       |             |
+| `CURSEFORGE_ENVIRONMENT`   | The environment of the artifact                                                   | No       |             |
+| `CURSEFORGE_MANUAL`        | Whether to manually create the release                                            | No       |             |

@@ -11,7 +11,7 @@ public interface CurseForgePropertyKey {
     PropertyKey RELEASE_TYPE = CURSEFORGE.key("releaseType");
     PropertyKey GAME_VERSIONS = CURSEFORGE.key("gameVersions");
     PropertyKey RELATIONS = CURSEFORGE.key("relations");
-    PropertyKey LOADERS = CURSEFORGE.key("loaders");
+    PropertyKey MOD_LOADERS = CURSEFORGE.key("modLoaders");
     PropertyKey JAVA_VERSION = CURSEFORGE.key("javaVersion");
     PropertyKey ENVIRONMENT = CURSEFORGE.key("environment");
     PropertyKey MANUAL = CURSEFORGE.key("manual");
