@@ -85,7 +85,7 @@ public class HangarPlatform implements Platform {
 
         TaskPool preparePool = batchRunnable.getTaskPool(0);
         preparePool.addLast(process -> {
-            List<String> gameVersions = Arrays.asList(StringUtil.splitSpace(CommonPropertyKey.GAME_VERSIONS.getValue()));
+            List<String> gameVersions = Arrays.asList(StringUtil.splitSpace(HangarPropertyKey.GAME_VERSIONS.getValue()));
             MinecraftVersionFetcher.normalizeVersions(gameVersions, VersionTypeFilter.RELEASE).whenComplete((versions, throwable) -> {
                 if (throwable != null) {
                     logger.error("Failed to fetch version", throwable);
