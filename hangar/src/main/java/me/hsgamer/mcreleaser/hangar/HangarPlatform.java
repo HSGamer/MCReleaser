@@ -60,7 +60,7 @@ public class HangarPlatform implements Platform {
             try {
                 ApiSession apiSession = client.execute(tokenRequest, response -> {
                     if (response.getCode() != 200) {
-                        logger.error("Failed to get token: " + response.getCode());
+                        logger.error("Failed to get token: {}", response.getCode());
                         return null;
                     }
                     try {
@@ -178,7 +178,7 @@ public class HangarPlatform implements Platform {
                 boolean success = client.execute(request, response -> {
                     if (response.getCode() != 200) {
                         String responseBody = EntityUtils.toString(response.getEntity());
-                        logger.error("Failed to upload version: " + response.getCode() + " - " + responseBody);
+                        logger.error("Failed to upload version: {} - {}", response.getCode(), responseBody);
                         return false;
                     }
                     return true;

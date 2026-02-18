@@ -97,10 +97,10 @@ public class GithubPlatform implements Platform {
                 GHRelease release = process.getData().get("release");
                 for (File file : fileBundle.allFiles()) {
                     release.uploadAsset(file, "application/octet-stream");
-                    logger.info("File uploaded: " + file.getName());
+                    logger.info("File uploaded: {}", file.getName());
                 }
                 logger.info("All files uploaded");
-                logger.info("Release URL: " + release.getHtmlUrl());
+                logger.info("Release URL: {}", release.getHtmlUrl());
                 process.next();
             } catch (Exception e) {
                 logger.error("Failed to upload the file", e);

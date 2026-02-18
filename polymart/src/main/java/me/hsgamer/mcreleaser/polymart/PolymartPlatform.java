@@ -90,7 +90,7 @@ public class PolymartPlatform implements Platform {
                 boolean success = client.execute(request, response -> {
                     if (response.getCode() != 200) {
                         String responseBody = EntityUtils.toString(response.getEntity());
-                        logger.error("Failed to post update: " + response.getCode() + " - " + responseBody);
+                        logger.error("Failed to post update: {} - {}", response.getCode(), responseBody);
                         return false;
                     }
 
@@ -146,7 +146,7 @@ public class PolymartPlatform implements Platform {
                 boolean success = client.execute(uploadRequest, response -> {
                     if (response.getCode() != 200 && response.getCode() != 204) {
                         String responseBody = EntityUtils.toString(response.getEntity());
-                        logger.error("Failed to upload file: " + response.getCode() + " - " + responseBody);
+                        logger.error("Failed to upload file: {} - {}", response.getCode(), responseBody);
                         return false;
                     }
                     return true;
