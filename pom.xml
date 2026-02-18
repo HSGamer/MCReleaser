@@ -18,6 +18,7 @@
         <module>modrinth</module>
         <module>hangar</module>
         <module>polymart</module>
+        <module>curseforge</module>
 
         <!-- Helper modules -->
         <module>renderer</module>

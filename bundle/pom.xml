@@ -37,5 +37,10 @@
             <artifactId>mc-releaser-polymart</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>me.hsgamer</groupId>
+            <artifactId>mc-releaser-curseforge</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 </project>
