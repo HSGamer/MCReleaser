@@ -1,6 +1,6 @@
 # MCReleaser
 
-A program to publish artifacts to multiple Minecraft-related platforms
+A program to publish artifacts to multiple platforms of voxel games
 
 ## Usage
 
