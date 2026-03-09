@@ -71,9 +71,10 @@ public class GithubPlatform implements Platform {
         releasePool.addLast(process -> {
             try {
                 GHRepository repository = process.getData().get("repository");
-                GHRelease release = repository.getReleaseByTagName(GithubPropertyKey.REF.getValue());
+                String tagName = getVersionFromRef(GithubPropertyKey.REF.getValue());
+                GHRelease release = repository.getReleaseByTagName(tagName);
                 if (release == null) {
-                    release = repository.createRelease(GithubPropertyKey.REF.getValue())
+                    release = repository.createRelease(tagName)
                             .draft(GithubPropertyKey.DRAFT.asBoolean(false))
                             .prerelease(GithubPropertyKey.PRERELEASE.asBoolean(false))
                             .name(CommonPropertyKey.NAME.getValue())
