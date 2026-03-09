@@ -89,7 +89,7 @@ public class CurseForgePlatform implements Platform {
 
                     HttpGet versionsEndpoint = new HttpGet(endpoint + "/api/game/versions");
                     versionsEndpoint.setHeader("X-Api-Token", CurseForgePropertyKey.TOKEN.getValue());
-                    JsonArray versions = client.execute(versionTypesEndpoint, response -> {
+                    JsonArray versions = client.execute(versionsEndpoint, response -> {
                         if (response.getCode() != 200) {
                             logger.error("Failed to get version: {}", response.getCode());
                             return null;
