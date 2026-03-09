@@ -32,7 +32,7 @@ docker run
 
 ```yml
 - name: Release
-  uses: HSGamer/mcreleaser@main
+  uses: HSGamer/MCReleaser@main
   with:
     files: |
       build/libs/MyPlugin-*.jar
