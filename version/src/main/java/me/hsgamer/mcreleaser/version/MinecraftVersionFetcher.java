@@ -3,6 +3,7 @@ package me.hsgamer.mcreleaser.version;
 import com.google.gson.Gson;
 
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -28,7 +29,7 @@ public class MinecraftVersionFetcher {
                 .build();
         return client.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream())
                 .thenApply(HttpResponse::body)
-                .thenApply(inputStream -> new Gson().fromJson(new InputStreamReader(inputStream), VersionManifest.class))
+                .thenApply(inputStream -> new Gson().fromJson(new InputStreamReader(inputStream, StandardCharsets.UTF_8), VersionManifest.class))
                 .thenApply(manifest -> {
                     versionManifestRef.set(manifest);
                     return manifest;
@@ -96,7 +97,7 @@ public class MinecraftVersionFetcher {
                     }
                 }
 
-                if (startIndex == -1 || endIndex == -1 || startIndex < endIndex) {
+                if (startIndex == -1 || endIndex == -1 || startIndex > endIndex) {
                     throw new IllegalArgumentException("Invalid version range: " + versionFilter);
                 }
 
