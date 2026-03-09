@@ -83,13 +83,14 @@ public class CurseForgePlatform implements Platform {
                         }
                     });
                     if (versionTypes == null) {
+                        try { client.close(); } catch (IOException ignored) {}
                         process.complete();
                         return;
                     }
 
                     HttpGet versionsEndpoint = new HttpGet(endpoint + "/api/game/versions");
                     versionsEndpoint.setHeader("X-Api-Token", CurseForgePropertyKey.TOKEN.getValue());
-                    JsonArray versions = client.execute(versionTypesEndpoint, response -> {
+                    JsonArray versions = client.execute(versionsEndpoint, response -> {
                         if (response.getCode() != 200) {
                             logger.error("Failed to get version: {}", response.getCode());
                             return null;
@@ -102,6 +103,7 @@ public class CurseForgePlatform implements Platform {
                         }
                     });
                     if (versions == null) {
+                        try { client.close(); } catch (IOException ignored) {}
                         process.complete();
                         return;
                     }
@@ -139,6 +141,7 @@ public class CurseForgePlatform implements Platform {
                     process.next();
                 } catch (IOException e) {
                     logger.error("Failed to get version types", e);
+                    try { client.close(); } catch (IOException ignored) {}
                     process.complete();
                 }
             });
@@ -149,11 +152,13 @@ public class CurseForgePlatform implements Platform {
                     MinecraftVersionFetcher.normalizeVersions(gameVersions, VersionTypeFilter.RELEASE).whenComplete((versions, throwable) -> {
                         if (throwable != null) {
                             logger.error("Failed to fetch version", throwable);
+                            CloseableHttpClient clientToClose = process.getData().get("client");
+                            try { clientToClose.close(); } catch (IOException ignored) {}
                             process.complete();
                             return;
                         }
 
-                        for (String gameVersion : gameVersions) {
+                        for (String gameVersion : versions) {
                             addToGameVersions.accept(gameVersion, "minecraft");
                         }
                         process.next();
@@ -227,6 +232,8 @@ public class CurseForgePlatform implements Platform {
                     relationsArray = gson.fromJson(CurseForgePropertyKey.RELATIONS.getValue(), JsonArray.class);
                 } catch (Exception e) {
                     logger.error("Invalid relations", e);
+                    CloseableHttpClient clientToClose = process.getData().get("client");
+                    try { clientToClose.close(); } catch (IOException ignored) {}
                     process.complete();
                     return;
                 }
