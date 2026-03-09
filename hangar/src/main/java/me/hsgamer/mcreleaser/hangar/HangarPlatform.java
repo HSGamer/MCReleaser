@@ -83,7 +83,7 @@ public class HangarPlatform implements Platform {
             }
         });
 
-        TaskPool preparePool = batchRunnable.getTaskPool(0);
+        TaskPool preparePool = batchRunnable.getTaskPool(1);
         preparePool.addLast(process -> {
             List<String> gameVersions = Arrays.asList(StringUtil.splitSpace(HangarPropertyKey.GAME_VERSIONS.getValue()));
             MinecraftVersionFetcher.normalizeVersions(gameVersions, VersionTypeFilter.RELEASE).whenComplete((versions, throwable) -> {
@@ -158,7 +158,7 @@ public class HangarPlatform implements Platform {
             process.next();
         });
 
-        TaskPool uploadPool = batchRunnable.getTaskPool(0);
+        TaskPool uploadPool = batchRunnable.getTaskPool(2);
         uploadPool.addLast(process -> {
             HttpClient client = process.getData().get("client");
 
