@@ -30,7 +30,41 @@ docker run
 
 ### Github Actions
 
-Check [action-mcreleaser](https://github.com/HSGamer/action-mcreleaser)
+```yml
+- name: Release
+  uses: HSGamer/mcreleaser@main
+  with:
+    files: |
+      build/libs/MyPlugin-*.jar
+      *.jar
+    platforms: all
+  env:
+    GITHUB_TOKEN: ${{ github.token }}
+
+    MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+    MODRINTH_PROJECT: AABBCC
+    MODRINTH_LOADERS: folia
+
+    HANGAR_KEY: ${{ secrets.HANGAR_KEY }}
+    HANGAR_PROJECT: AABBCC
+    HANGAR_PLATFORM: paper
+```
+
+> Check [Environment Variables](#environment-variables) for available variables to put in `env`
+
+#### Inputs
+
+- `files`
+    * Required: `true`
+    * A file or wildcard pattern to upload
+    * It's splited into primary and secondary files
+    * If a single line is provided, the first file will be the primary one, others will be secondary
+    * If multiple line is provided, the first line is for primary files, others are for secondary files
+
+- `platforms`
+    * Required: `false`
+    * Default: `all`
+    * The platforms where the artifacts will be uploaded to
 
 ## Environment Variables
 
