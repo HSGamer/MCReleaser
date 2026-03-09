@@ -27,9 +27,9 @@ public class PathUtil {
                         Path relativePath = currentPath.relativize(path);
 
                         if (primaryFileMatcher.matches(relativePath)) {
-                            if (primaryFileRef.get() == null || !secondaryFileMatcher.isEmpty()) {
+                            if (primaryFileRef.get() == null) {
                                 primaryFileRef.set(file);
-                            } else {
+                            } else if (secondaryFileMatcher.isEmpty()) {
                                 secondaryFiles.add(file);
                             }
                         }
