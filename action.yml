@@ -1,5 +1,5 @@
-name: 'mcreleaser'
-description: 'Github Action to publish artifacts to multiple Minecraft-related platforms using MCReleaser'
+name: 'MCReleaser'
+description: 'Github Action to publish artifacts to multiple platforms of voxel games'
 inputs:
   files:
     description: 'The files to upload'
