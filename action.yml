@@ -1,0 +1,16 @@
+name: 'mcreleaser'
+description: 'Github Action to publish artifacts to multiple Minecraft-related platforms using MCReleaser'
+inputs:
+  files:
+    description: 'The files to upload'
+    required: true
+  platforms:
+    description: 'The platforms to upload to'
+    required: false
+    default: 'all'
+runs:
+  using: 'docker'
+  image: 'docker://ghcr.io/hsgamer/mcreleaser:master'
+  env:
+    FILES: ${{ inputs.files }}
+    PLATFORMS: ${{ inputs.platforms }}
