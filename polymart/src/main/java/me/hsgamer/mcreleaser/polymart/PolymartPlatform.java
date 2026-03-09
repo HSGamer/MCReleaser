@@ -33,7 +33,7 @@ public class PolymartPlatform implements Platform {
 
     @Override
     public Optional<BatchRunnable> createUploadRunnable(FileBundle fileBundle) {
-        if (PropertyKeyUtil.isAbsentAndAnnounce(logger, PolymartPropertyKey.KEY, PolymartPropertyKey.RESOURCE)) {
+        if (PropertyKeyUtil.isAbsentAndAnnounce(logger, PolymartPropertyKey.KEY, PolymartPropertyKey.RESOURCE, CommonPropertyKey.DESCRIPTION)) {
             return Optional.empty();
         }
 
