@@ -111,8 +111,6 @@ docker run
 | `MODRINTH_LOADERS`           | The loaders that the artifact supports                                            | Yes      |         |
 | `MODRINTH_VERSION_TYPE`      | The Modrinth version type to publish the artifact                                 | No       | Release |
 | `MODRINTH_DEPENDENCIES`      | The dependencies of the artifact                                                  | No       |         |
-| `MODRINTH_FEATURED`          | Whether to feature the artifact                                                   | No       | `true`  |
-| `MODRINTH_UNFEATURE`         | Whether to unfeature other versions                                               | No       | `true`  |
 
 ### [Polymart](https://polymart.org/)
 
