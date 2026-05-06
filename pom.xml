@@ -17,7 +17,7 @@
         <module>github</module>
         <module>modrinth</module>
         <module>hangar</module>
-        <module>polymart</module>
+        <module>voxelshop</module>
         <module>curseforge</module>
 
         <!-- Helper modules -->

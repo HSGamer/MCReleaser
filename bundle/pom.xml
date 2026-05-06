@@ -34,7 +34,7 @@
         </dependency>
         <dependency>
             <groupId>me.hsgamer</groupId>
-            <artifactId>mc-releaser-polymart</artifactId>
+            <artifactId>mc-releaser-voxelshop</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

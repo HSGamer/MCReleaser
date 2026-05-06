@@ -83,7 +83,10 @@ public class CurseForgePlatform implements Platform {
                         }
                     });
                     if (versionTypes == null) {
-                        try { client.close(); } catch (IOException ignored) {}
+                        try {
+                            client.close();
+                        } catch (IOException ignored) {
+                        }
                         process.complete();
                         return;
                     }
@@ -103,7 +106,10 @@ public class CurseForgePlatform implements Platform {
                         }
                     });
                     if (versions == null) {
-                        try { client.close(); } catch (IOException ignored) {}
+                        try {
+                            client.close();
+                        } catch (IOException ignored) {
+                        }
                         process.complete();
                         return;
                     }
@@ -141,7 +147,10 @@ public class CurseForgePlatform implements Platform {
                     process.next();
                 } catch (IOException e) {
                     logger.error("Failed to get version types", e);
-                    try { client.close(); } catch (IOException ignored) {}
+                    try {
+                        client.close();
+                    } catch (IOException ignored) {
+                    }
                     process.complete();
                 }
             });
@@ -153,7 +162,10 @@ public class CurseForgePlatform implements Platform {
                         if (throwable != null) {
                             logger.error("Failed to fetch version", throwable);
                             CloseableHttpClient clientToClose = process.getData().get("client");
-                            try { clientToClose.close(); } catch (IOException ignored) {}
+                            try {
+                                clientToClose.close();
+                            } catch (IOException ignored) {
+                            }
                             process.complete();
                             return;
                         }
@@ -233,7 +245,10 @@ public class CurseForgePlatform implements Platform {
                 } catch (Exception e) {
                     logger.error("Invalid relations", e);
                     CloseableHttpClient clientToClose = process.getData().get("client");
-                    try { clientToClose.close(); } catch (IOException ignored) {}
+                    try {
+                        clientToClose.close();
+                    } catch (IOException ignored) {
+                    }
                     process.complete();
                     return;
                 }

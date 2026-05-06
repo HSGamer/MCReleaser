@@ -9,7 +9,7 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>mc-releaser-polymart</artifactId>
+    <artifactId>mc-releaser-voxelshop</artifactId>
 
     <dependencies>
         <dependency>

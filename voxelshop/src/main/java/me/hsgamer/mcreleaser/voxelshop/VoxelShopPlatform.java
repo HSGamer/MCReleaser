@@ -1,4 +1,4 @@
-package me.hsgamer.mcreleaser.polymart;
+package me.hsgamer.mcreleaser.voxelshop;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -8,6 +8,8 @@ import me.hsgamer.hscore.task.element.TaskPool;
 import me.hsgamer.mcreleaser.core.file.FileBundle;
 import me.hsgamer.mcreleaser.core.platform.Platform;
 import me.hsgamer.mcreleaser.core.property.CommonPropertyKey;
+import me.hsgamer.mcreleaser.core.property.PropertyKey;
+import me.hsgamer.mcreleaser.core.property.PropertyPrefix;
 import me.hsgamer.mcreleaser.core.util.PropertyKeyUtil;
 import me.hsgamer.mcreleaser.renderer.html.MarkdownToHTMLConverter;
 import org.apache.hc.client5.http.classic.HttpClient;
@@ -28,12 +30,30 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class PolymartPlatform implements Platform {
+public class VoxelShopPlatform implements Platform {
+    static {
+        // This is here to remain the backward compatibility for the old property keys from Polymart
+        PropertyPrefix polymart = new PropertyPrefix("polymart");
+        PropertyKey polymartKey = polymart.key("key");
+        PropertyKey polymartResource = polymart.key("resource");
+        PropertyKey polymartTag = polymart.key("tag");
+
+        if (polymartKey.isPresent() && VoxelShopPropertyKey.KEY.isAbsent()) {
+            VoxelShopPropertyKey.KEY.setValue(polymartKey.getValue());
+        }
+        if (polymartResource.isPresent() && VoxelShopPropertyKey.RESOURCE.isAbsent()) {
+            VoxelShopPropertyKey.RESOURCE.setValue(polymartResource.getValue());
+        }
+        if (polymartTag.isPresent() && VoxelShopPropertyKey.TAG.isAbsent()) {
+            VoxelShopPropertyKey.TAG.setValue(polymartTag.getValue());
+        }
+    }
+
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Override
     public Optional<BatchRunnable> createUploadRunnable(FileBundle fileBundle) {
-        if (PropertyKeyUtil.isAbsentAndAnnounce(logger, PolymartPropertyKey.KEY, PolymartPropertyKey.RESOURCE)) {
+        if (PropertyKeyUtil.isAbsentAndAnnounce(logger, VoxelShopPropertyKey.KEY, VoxelShopPropertyKey.RESOURCE)) {
             return Optional.empty();
         }
 
@@ -49,11 +69,11 @@ public class PolymartPlatform implements Platform {
         TaskPool preparePool = batchRunnable.getTaskPool(1);
         preparePool.addLast(process -> {
             Map<String, String> jsonBody = new HashMap<>();
-            jsonBody.put("api_key", PolymartPropertyKey.KEY.getValue());
-            jsonBody.put("product", PolymartPropertyKey.RESOURCE.getValue());
+            jsonBody.put("api_key", VoxelShopPropertyKey.KEY.getValue());
+            jsonBody.put("product", VoxelShopPropertyKey.RESOURCE.getValue());
             jsonBody.put("version", CommonPropertyKey.VERSION.getValue());
             jsonBody.put("file_name", fileBundle.primaryFile().getName());
-            jsonBody.put("tag", PolymartPropertyKey.TAG.getValue("release"));
+            jsonBody.put("tag", VoxelShopPropertyKey.TAG.getValue("release"));
 
             if (CommonPropertyKey.NAME.getValue() != null && !CommonPropertyKey.NAME.getValue().isEmpty()) {
                 jsonBody.put("update_title", CommonPropertyKey.NAME.getValue());
@@ -83,7 +103,7 @@ public class PolymartPlatform implements Platform {
             HttpClient client = process.getData().get("client");
             HttpEntity entity = process.getData().get("entity");
 
-            HttpPost request = new HttpPost("https://api.polymart.org/v1/doPostUpdate");
+            HttpPost request = new HttpPost("https://api.voxel.shop/v1/doPostUpdate");
             request.setEntity(entity);
 
             try {
@@ -100,10 +120,8 @@ public class PolymartPlatform implements Platform {
                         JsonObject uploadNode = responseNode.getAsJsonObject("response").getAsJsonObject("upload");
 
                         String uploadUrl = uploadNode.get("url").getAsString();
-                        JsonObject fieldsNode = uploadNode.getAsJsonObject("fields");
 
                         process.getData().put("uploadUrl", uploadUrl);
-                        process.getData().put("uploadFields", fieldsNode);
                         return true;
                     } catch (Exception e) {
                         logger.error("Failed to parse upload response", e);
@@ -125,16 +143,8 @@ public class PolymartPlatform implements Platform {
         uploadPool.addLast(process -> {
             HttpClient client = process.getData().get("client");
             String uploadUrl = process.getData().get("uploadUrl");
-            JsonObject fieldsNode = process.getData().get("uploadFields");
 
             MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-
-            // Add all fields from the response
-            if (fieldsNode != null) {
-                fieldsNode.entrySet().forEach(entry -> {
-                    builder.addTextBody(entry.getKey(), entry.getValue().getAsString());
-                });
-            }
 
             // Add the file
             builder.addBinaryBody("file", process.getData().<File>get("file"));

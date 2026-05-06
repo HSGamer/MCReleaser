@@ -112,13 +112,13 @@ docker run
 | `MODRINTH_VERSION_TYPE`      | The Modrinth version type to publish the artifact                                 | No       | Release |
 | `MODRINTH_DEPENDENCIES`      | The dependencies of the artifact                                                  | No       |         |
 
-### [Polymart](https://polymart.org/)
+### [voxel.shop](https://voxel.shop/)
 
-| Name                | Description                                            | Required | Default   |
-|---------------------|--------------------------------------------------------|----------|-----------|
-| `POLYMART_KEY`      | The Polymart API key to publish the artifact           | Yes      |           |
-| `POLYMART_RESOURCE` | The Polymart resource to publish the artifact          | Yes      |           |
-| `POLYMART_TAG`      | The tag of the artifact. `release`, `beta`, `snapshot` | No       | `release` |
+| Name                 | Description                                            | Required | Default   |
+|----------------------|--------------------------------------------------------|----------|-----------|
+| `VOXELSHOP_KEY`      | The voxel.shop API key to publish the artifact         | Yes      |           |
+| `VOXELSHOP_RESOURCE` | The voxel.shop resource to publish the artifact        | Yes      |           |
+| `VOXELSHOP_TAG`      | The tag of the artifact. `release`, `beta`, `snapshot` | No       | `release` |
 
 ### [CurseForge](https://www.curseforge.com/)
 

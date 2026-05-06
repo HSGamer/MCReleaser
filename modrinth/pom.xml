@@ -12,7 +12,6 @@
     <artifactId>mc-releaser-modrinth</artifactId>
 
 
-
     <dependencies>
         <dependency>
             <groupId>me.hsgamer</groupId>
