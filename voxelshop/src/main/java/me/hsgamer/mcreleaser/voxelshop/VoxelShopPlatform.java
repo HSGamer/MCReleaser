@@ -14,6 +14,7 @@ import me.hsgamer.mcreleaser.core.util.PropertyKeyUtil;
 import me.hsgamer.mcreleaser.renderer.html.MarkdownToHTMLConverter;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.classic.methods.HttpPut;
 import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
@@ -149,7 +150,7 @@ public class VoxelShopPlatform implements Platform {
             // Add the file
             builder.addBinaryBody("file", process.getData().<File>get("file"));
 
-            HttpPost uploadRequest = new HttpPost(uploadUrl);
+            HttpPut uploadRequest = new HttpPut(uploadUrl);
             uploadRequest.setEntity(builder.build());
 
             try {
