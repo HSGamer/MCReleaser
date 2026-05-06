@@ -24,7 +24,7 @@ public class BundlePlatform implements Platform {
             Map.entry("github", GithubPlatform::new),
             Map.entry("modrinth", ModrinthPlatform::new),
             Map.entry("hangar", HangarPlatform::new),
-            Map.entry("polymart", VoxelShopPlatform::new),
+            Map.entry("voxelshop", VoxelShopPlatform::new),
             Map.entry("curseforge", CurseForgePlatform::new)
     );
 
