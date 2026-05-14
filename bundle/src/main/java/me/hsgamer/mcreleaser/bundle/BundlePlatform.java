@@ -6,6 +6,7 @@ import me.hsgamer.mcreleaser.core.file.FileBundle;
 import me.hsgamer.mcreleaser.core.platform.Platform;
 import me.hsgamer.mcreleaser.core.util.StringUtil;
 import me.hsgamer.mcreleaser.curseforge.CurseForgePlatform;
+import me.hsgamer.mcreleaser.discord.DiscordPlatform;
 import me.hsgamer.mcreleaser.github.GithubPlatform;
 import me.hsgamer.mcreleaser.hangar.HangarPlatform;
 import me.hsgamer.mcreleaser.modrinth.ModrinthPlatform;
@@ -25,7 +26,8 @@ public class BundlePlatform implements Platform {
             Map.entry("modrinth", ModrinthPlatform::new),
             Map.entry("hangar", HangarPlatform::new),
             Map.entry("voxelshop", VoxelShopPlatform::new),
-            Map.entry("curseforge", CurseForgePlatform::new)
+            Map.entry("curseforge", CurseForgePlatform::new),
+            Map.entry("discord", DiscordPlatform::new)
     );
 
     private final boolean runSync;

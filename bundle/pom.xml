@@ -42,5 +42,10 @@
             <artifactId>mc-releaser-curseforge</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>me.hsgamer</groupId>
+            <artifactId>mc-releaser-discord</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 </project>

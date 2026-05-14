@@ -1,0 +1,13 @@
+{
+  "content": "A new version of **{name}** has been released!",
+  "embeds": [
+    {
+      "title": "{version}",
+      "description": "{description}",
+      "color": 5814783,
+      "footer": {
+        "text": "Created by MCReleaser"
+      }
+    }
+  ]
+}

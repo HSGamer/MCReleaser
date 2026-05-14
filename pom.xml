@@ -19,6 +19,7 @@
         <module>hangar</module>
         <module>voxelshop</module>
         <module>curseforge</module>
+        <module>discord</module>
 
         <!-- Helper modules -->
         <module>renderer</module>

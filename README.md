@@ -48,6 +48,8 @@ docker run
     HANGAR_KEY: ${{ secrets.HANGAR_KEY }}
     HANGAR_PROJECT: AABBCC
     HANGAR_PLATFORM: paper
+
+    DISCORD_URL: ${{ secrets.DISCORD_WEBHOOK }}
 ```
 
 > Check [Environment Variables](#environment-variables) for available variables to put in `env`
@@ -134,3 +136,14 @@ docker run
 | `CURSEFORGE_JAVA_VERSION`  | The Java version required for the artifact                                        | No       |             |
 | `CURSEFORGE_ENVIRONMENT`   | The environment of the artifact                                                   | No       |             |
 | `CURSEFORGE_MANUAL`        | Whether to manually create the release                                            | No       |             |
+
+### [Discord](https://discord.com/)
+
+| Name                     | Description                                                                               | Required | Default                           |
+|--------------------------|-------------------------------------------------------------------------------------------|----------|-----------------------------------|
+| `DISCORD_URL`            | The Discord Webhook URL to send the message                                               | Yes      |                                   |
+| `DISCORD_FILE`           | The path to the JSON file containing the message payload                                  | No       | `default-message.json` (Internal) |
+| `DISCORD_PROFILE_NAME`   | Customizes the webhook username                                                           | No       |                                   |
+| `DISCORD_PROFILE_AVATAR` | Customizes the webhook avatar URL                                                         | No       |                                   |
+| `DISCORD_COLOR`          | Customizes the embed color (Hex like `#FFFFFF` or Decimal)                                | No       | `5814783`                         |
+| `DISCORD_LINKS`          | JSON object of links: `{"Name": "URL"}`. Adds a "Links" field to the first embed          | No       |                                   |
