@@ -15,38 +15,25 @@ import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Scanner;
 
 public class DiscordPlatform implements Platform {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Gson gson = new Gson();
 
-    private String readDefaultMessage() {
-        try (InputStream inputStream = getClass().getResourceAsStream("/default-message.json")) {
-            if (inputStream == null) {
-                logger.error("Default message file not found in resources");
-                return null;
-            }
-            try (Scanner scanner = new Scanner(inputStream, StandardCharsets.UTF_8)) {
-                return scanner.useDelimiter("\\A").next();
-            }
-        } catch (IOException e) {
-            logger.error("Failed to read default message from resources", e);
-            return null;
+    private JsonElement getDefaultMessage() {
+        JsonObject jsonObject = new JsonObject();
+        String project = CommonPropertyKey.PROJECT.getValue("");
+        String version = CommonPropertyKey.VERSION.getValue("");
+        if (project.isEmpty()) {
+            jsonObject.addProperty("content", "Version **" + version + "** has been released!");
+        } else {
+            jsonObject.addProperty("content", "**" + project + "** has been updated to `" + version + "`!");
         }
-    }
-
-    private JsonElement postProcess(JsonElement element) {
-        if (!element.isJsonObject()) return element;
-        JsonObject jsonObject = element.getAsJsonObject();
 
         if (DiscordPropertyKey.PROFILE_NAME.isPresent()) {
             jsonObject.addProperty("username", DiscordPropertyKey.PROFILE_NAME.getValue());
@@ -55,51 +42,55 @@ public class DiscordPlatform implements Platform {
             jsonObject.addProperty("avatar_url", DiscordPropertyKey.PROFILE_AVATAR.getValue());
         }
 
-        if (jsonObject.has("embeds") && jsonObject.get("embeds").isJsonArray()) {
-            JsonArray embeds = jsonObject.getAsJsonArray("embeds");
-            if (!embeds.isEmpty() && embeds.get(0).isJsonObject()) {
-                JsonObject firstEmbed = embeds.get(0).getAsJsonObject();
+        JsonArray embeds = new JsonArray();
+        JsonObject embed = new JsonObject();
+        embed.addProperty("title", CommonPropertyKey.NAME.getValue(""));
+        embed.addProperty("description", CommonPropertyKey.DESCRIPTION.getValue(""));
 
-                if (DiscordPropertyKey.COLOR.isPresent()) {
-                    String colorStr = DiscordPropertyKey.COLOR.getValue();
-                    try {
-                        int color;
-                        if (colorStr.startsWith("#")) {
-                            color = Integer.parseInt(colorStr.substring(1), 16);
-                        } else {
-                            color = Integer.parseInt(colorStr);
-                        }
-                        firstEmbed.addProperty("color", color);
-                    } catch (NumberFormatException e) {
-                        logger.warn("Invalid color format: {}", colorStr);
-                    }
+        int color = 5814783;
+        if (DiscordPropertyKey.COLOR.isPresent()) {
+            String colorStr = DiscordPropertyKey.COLOR.getValue();
+            try {
+                if (colorStr.startsWith("#")) {
+                    color = Integer.parseInt(colorStr.substring(1), 16);
+                } else {
+                    color = Integer.parseInt(colorStr);
                 }
-
-                if (DiscordPropertyKey.LINKS.isPresent()) {
-                    String linksJson = DiscordPropertyKey.LINKS.getValue();
-                    try {
-                        JsonObject linksObj = JsonParser.parseString(linksJson).getAsJsonObject();
-                        StringBuilder linksBuilder = new StringBuilder();
-                        for (Map.Entry<String, JsonElement> entry : linksObj.entrySet()) {
-                            if (!linksBuilder.isEmpty()) linksBuilder.append("\n");
-                            linksBuilder.append("[").append(entry.getKey()).append("](").append(entry.getValue().getAsString()).append(")");
-                        }
-
-                        if (!linksBuilder.isEmpty()) {
-                            JsonArray fields = firstEmbed.has("fields") && firstEmbed.get("fields").isJsonArray()
-                                    ? firstEmbed.getAsJsonArray("fields") : new JsonArray();
-                            JsonObject linksField = new JsonObject();
-                            linksField.addProperty("name", "Links");
-                            linksField.addProperty("value", linksBuilder.toString());
-                            fields.add(linksField);
-                            firstEmbed.add("fields", fields);
-                        }
-                    } catch (Exception e) {
-                        logger.warn("Invalid links format: {}", linksJson);
-                    }
-                }
+            } catch (NumberFormatException e) {
+                logger.warn("Invalid color format: {}", colorStr);
             }
         }
+        embed.addProperty("color", color);
+
+        if (DiscordPropertyKey.LINKS.isPresent()) {
+            String linksJson = DiscordPropertyKey.LINKS.getValue();
+            try {
+                JsonObject linksObj = JsonParser.parseString(linksJson).getAsJsonObject();
+                StringBuilder linksBuilder = new StringBuilder();
+                for (Map.Entry<String, JsonElement> entry : linksObj.entrySet()) {
+                    if (!linksBuilder.isEmpty()) linksBuilder.append("\n");
+                    linksBuilder.append("[").append(entry.getKey()).append("](").append(entry.getValue().getAsString()).append(")");
+                }
+
+                if (!linksBuilder.isEmpty()) {
+                    JsonArray fields = new JsonArray();
+                    JsonObject linksField = new JsonObject();
+                    linksField.addProperty("name", "Links");
+                    linksField.addProperty("value", linksBuilder.toString());
+                    fields.add(linksField);
+                    embed.add("fields", fields);
+                }
+            } catch (Exception e) {
+                logger.warn("Invalid links format: {}", linksJson);
+            }
+        }
+
+        JsonObject footer = new JsonObject();
+        footer.addProperty("text", "Created by MCReleaser");
+        embed.add("footer", footer);
+
+        embeds.add(embed);
+        jsonObject.add("embeds", embeds);
         return jsonObject;
     }
 
@@ -144,43 +135,27 @@ public class DiscordPlatform implements Platform {
             String webhookUrl = DiscordPropertyKey.URL.getValue();
             String messageFilePath = DiscordPropertyKey.FILE.getValue();
 
-            String rawContent;
+            JsonElement jsonElement;
             if (messageFilePath == null || messageFilePath.isEmpty()) {
-                rawContent = readDefaultMessage();
+                jsonElement = getDefaultMessage();
             } else {
                 Path messageFile = Paths.get(messageFilePath);
                 if (!Files.exists(messageFile)) {
-                    logger.warn("Message file not found: {}. Using default message.", messageFile);
-                    rawContent = readDefaultMessage();
-                } else {
-                    try {
-                        rawContent = Files.readString(messageFile);
-                    } catch (IOException e) {
-                        logger.error("Failed to read message file: {}. Using default message.", messageFile, e);
-                        rawContent = readDefaultMessage();
-                    }
+                    logger.error("Message file not found: {}", messageFile);
+                    process.complete();
+                    return;
+                }
+                try {
+                    String rawContent = Files.readString(messageFile);
+                    jsonElement = replacePlaceholders(JsonParser.parseString(rawContent));
+                } catch (Exception e) {
+                    logger.error("Failed to read or parse message file: {}", messageFile, e);
+                    process.complete();
+                    return;
                 }
             }
 
-            if (rawContent == null) {
-                process.complete();
-                return;
-            }
-
-            JsonElement jsonElement;
-            try {
-                jsonElement = JsonParser.parseString(rawContent);
-            } catch (Exception e) {
-                logger.error("Failed to parse message content", e);
-                process.complete();
-                return;
-            }
-
-            jsonElement = replacePlaceholders(jsonElement);
-            jsonElement = postProcess(jsonElement);
             String content = gson.toJson(jsonElement);
-
-            logger.info("Sending Discord message: {}", content);
 
             try (CloseableHttpClient client = HttpClients.createMinimal()) {
                 HttpPost post = new HttpPost(webhookUrl);
