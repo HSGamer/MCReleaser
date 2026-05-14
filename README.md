@@ -140,11 +140,12 @@ docker run
 
 ### [Discord](https://discord.com/)
 
-| Name                     | Description                                                                               | Required | Default                           |
-|--------------------------|-------------------------------------------------------------------------------------------|----------|-----------------------------------|
-| `DISCORD_URL`            | The Discord Webhook URL to send the message                                               | Yes      |                                   |
-| `DISCORD_FILE`           | The path to the JSON file containing the message payload                                  | No       | `default-message.json` (Internal) |
-| `DISCORD_PROFILE_NAME`   | Customizes the webhook username                                                           | No       |                                   |
-| `DISCORD_PROFILE_AVATAR` | Customizes the webhook avatar URL                                                         | No       |                                   |
-| `DISCORD_COLOR`          | Customizes the embed color (Hex like `#FFFFFF` or Decimal)                                | No       | `5814783`                         |
-| `DISCORD_LINKS`          | JSON object of links: `{"Name": "URL"}`. Adds a "Links" field to the first embed          | No       |                                   |
+| Name                     | Description                                                                      | Required | Default  |
+|--------------------------|----------------------------------------------------------------------------------|----------|----------|
+| `DISCORD_URL`            | The Discord Webhook URL to send the message                                      | Yes      |          |
+| `DISCORD_FILE`           | The path to the JSON file containing the message payload                         | No       | Internal |
+| `DISCORD_PROFILE_NAME`   | Customizes the webhook username                                                  | No       |          |
+| `DISCORD_PROFILE_AVATAR` | Customizes the webhook avatar URL                                                | No       |          |
+| `DISCORD_COLOR`          | Customizes the embed color (Hex like `#FFFFFF` or Decimal)                       | No       |          |
+| `DISCORD_LINKS`          | JSON object of links: `{"Name": "URL"}`. Adds a "Links" field to the first embed | No       |          |
+| `DISCORD_MENTIONS`       | Discord Role IDs to mention in the message                                       | No       |          |

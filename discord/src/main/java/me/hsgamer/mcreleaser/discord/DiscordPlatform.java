@@ -6,6 +6,7 @@ import me.hsgamer.mcreleaser.core.file.FileBundle;
 import me.hsgamer.mcreleaser.core.platform.Platform;
 import me.hsgamer.mcreleaser.core.property.CommonPropertyKey;
 import me.hsgamer.mcreleaser.core.util.PropertyKeyUtil;
+import me.hsgamer.mcreleaser.core.util.StringUtil;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
@@ -29,11 +30,28 @@ public class DiscordPlatform implements Platform {
         JsonObject jsonObject = new JsonObject();
         String project = CommonPropertyKey.PROJECT.getValue("");
         String version = CommonPropertyKey.VERSION.getValue("");
-        if (project.isEmpty()) {
-            jsonObject.addProperty("content", "Version **" + version + "** has been released!");
-        } else {
-            jsonObject.addProperty("content", "**" + project + "** has been updated to `" + version + "`!");
+
+        StringBuilder contentBuilder = new StringBuilder();
+        if (DiscordPropertyKey.MENTIONS.isPresent()) {
+            String[] mentions = StringUtil.splitCommaOrSpace(DiscordPropertyKey.MENTIONS.getValue());
+            boolean hasMentions = false;
+            for (String id : mentions) {
+                id = id.trim();
+                if (id.isEmpty()) continue;
+                contentBuilder.append("<@&").append(id).append("> ");
+                hasMentions = true;
+            }
+            if (hasMentions) {
+                contentBuilder.append("\n");
+            }
         }
+
+        if (project.isEmpty()) {
+            contentBuilder.append("Version **").append(version).append("** has been released!");
+        } else {
+            contentBuilder.append("**").append(project).append("** has been updated to `").append(version).append("`!");
+        }
+        jsonObject.addProperty("content", contentBuilder.toString().trim());
 
         if (DiscordPropertyKey.PROFILE_NAME.isPresent()) {
             jsonObject.addProperty("username", DiscordPropertyKey.PROFILE_NAME.getValue());

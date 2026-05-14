@@ -11,4 +11,5 @@ public interface DiscordPropertyKey {
     PropertyKey PROFILE_AVATAR = DISCORD.key("profileAvatar");
     PropertyKey COLOR = DISCORD.key("color");
     PropertyKey LINKS = DISCORD.key("links");
+    PropertyKey MENTIONS = DISCORD.key("mentions");
 }
