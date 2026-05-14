@@ -1,8 +1,8 @@
 {
-  "content": "A new version of **{name}** has been released!",
+  "content": "**{project}** has been updated to `{version}`!",
   "embeds": [
     {
-      "title": "{version}",
+      "title": "{name}",
       "description": "{description}",
       "color": 5814783,
       "footer": {

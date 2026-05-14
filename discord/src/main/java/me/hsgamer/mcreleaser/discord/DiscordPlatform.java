@@ -123,6 +123,7 @@ public class DiscordPlatform implements Platform {
             if (primitive.isString()) {
                 String value = primitive.getAsString();
                 value = value
+                        .replace("{project}", CommonPropertyKey.PROJECT.getValue(""))
                         .replace("{name}", CommonPropertyKey.NAME.getValue(""))
                         .replace("{version}", CommonPropertyKey.VERSION.getValue(""))
                         .replace("{description}", CommonPropertyKey.DESCRIPTION.getValue(""));

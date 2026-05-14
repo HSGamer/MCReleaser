@@ -1,6 +1,7 @@
 package me.hsgamer.mcreleaser.core.property;
 
 public interface CommonPropertyKey {
+    PropertyKey PROJECT = new PropertyKey("project");
     PropertyKey NAME = new PropertyKey("name");
     PropertyKey VERSION = new PropertyKey("version");
     PropertyKey DESCRIPTION = new PropertyKey("description");

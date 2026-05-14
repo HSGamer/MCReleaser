@@ -72,14 +72,15 @@ docker run
 
 ### Common
 
-| Name                   | Description                                  | Required | Default |
-|------------------------|----------------------------------------------|----------|---------|
-| `NAME`                 | The name of the artifact                     | Yes      |         |
-| `VERSION`              | The version of the artifact                  | Yes      |         |
-| `DESCRIPTION`          | The description of the artifact              | Yes      |         |
-| `ANNOUNCE_MISSING_KEY` | Whether to announce the missing variables    | No       | `false` |
-| `GAME_VERSIONS`        | The game versions that the artifact supports | No       |         |
-| `GAME_VERSION_TYPE`    | The type of the game version to filter       | No       |         |
+| Name                   | Description                                     | Required | Default |
+|------------------------|-------------------------------------------------|----------|---------|
+| `NAME`                 | The name of the artifact                        | Yes      |         |
+| `VERSION`              | The version of the artifact                     | Yes      |         |
+| `DESCRIPTION`          | The description of the artifact                 | Yes      |         |
+| `PROJECT`              | The name of the project containing the artifact | No       |         |
+| `ANNOUNCE_MISSING_KEY` | Whether to announce the missing variables       | No       | `false` |
+| `GAME_VERSIONS`        | The game versions that the artifact supports    | No       |         |
+| `GAME_VERSION_TYPE`    | The type of the game version to filter          | No       |         |
 
 ### [Github](https://github.com/)
 
